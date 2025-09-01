@@ -1,1 +1,28 @@
+<html>
+  <!----- START: web analytics via https://www.goatcounter.com/ , to log visits, without tracking personal info ----->
+
+<script>
+    window.goatcounter = {
+        path: function(p) {
+            // remove everything after the substring
+            let substring = "?circuit=";
+            let index = p.indexOf(substring);
+            if (index !== -1) {
+                p = p.slice(0, index + substring.length);
+            }
+            // prepend with the domain name
+            return location.host + p;
+        }
+    }
+</script>
+<script data-goatcounter="https://mjmcguffin.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+
+<!----- END: web analytics ----->
+<body>
 This is a test! :-)
+  
+</body>
+  
+</html>
+
