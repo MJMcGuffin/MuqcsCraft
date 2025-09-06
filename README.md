@@ -12,12 +12,13 @@ and like <a href="https://algassert.com/quirk">Quirk</a>, the structure of the c
 making it easy to bookmark or share circuits just by copying the URL.
 
 Below the circuit, MuqcsCraft can show the state vector layer-by-layer.
-For certain gates that appear alone in their layer
+For certain gates
 (namely, the $H$, $X$, $Y$, $Z$,
 $S = Z^{1/2}$, $S^{-1} = Z^{-1/2}$,
 $T = Z^{1/4}$, $T^{-1} = Z^{-1/4}$,
 Phase($\theta$) $= Z^{\theta/\pi}$, GlobalPhase($\theta$),
-and SWAP gates, with arbitrary control and anticontrol qubits),
+and SWAP gates, with arbitrary control and anticontrol qubits)
+that appear alone in their layer,
 the state vector is shown with <em>difference highlighting</em>,
 which uses colors, arrows, and symbols
 to make it easier to see how the gate changes the state vector in that layer.
@@ -33,7 +34,9 @@ G: tooltip.
 
 ![Example 1](/doc/screenshot-teaser.png)
 
-Example circuit that generates a W-4 state:
+Below is a circuit that generates a W-4 state.
+A: reduced state of each qubit, layer-by-layer.
+B: state vector, layer-by-layer, with difference highlighting.
 
 ![Example 2](/doc/screenshot-W4.png)
 
