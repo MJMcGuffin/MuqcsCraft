@@ -6,7 +6,7 @@ MuqcsCraft allows gates to be drag-and-dropped onto a circuit.
 Each gate can have an arbitrary number of control and anticontrol qubits.
 MuqcsCraft computes and can display
 the phase, probability, purity, linear entropy, and von Neumann entropy (to quantify mixedness) of individual qubits;
-and the concurrence (to quantify entanglement), correlation, purity, linear entropy, and von Neumann entropy of each pair of qubits.
+and the concurrence (to quantify entanglement), correlation, purity, linear entropy, and von Neumann entropy of each <em>pair</em> of qubits.
 MuqcsCraft runs inside a web browser,
 and like <a href="https://algassert.com/quirk">Quirk</a>, the structure of the circuit is encoded in the URL query string,
 making it easy to bookmark or share circuits just by copying the URL.
@@ -15,10 +15,10 @@ Below the circuit, MuqcsCraft can show the state vector layer-by-layer.
 For certain gates that appear alone in their layer
 (namely, the $H$, $X$, $Y$, $Z$,
 $S = \sqrt{Z}$, $S^{-1} = \sqrt{Z}^{-1}$,
-$T = \sqrt[4]{Z}$, $T{-1} = \sqrt[4]{Z}^{-1}$,
+$T = \sqrt[4]{Z}$, $T^{-1} = \sqrt[4]{Z}^{-1}$,
 Phase($\theta$) $= Z^{\theta/\pi}$, GlobalPhase($\theta$),
 and SWAP gates, with arbitrary control and anticontrol qubits),
-the state vector is shown with difference highlighting,
+the state vector is shown with <em>difference highlighting</em>,
 which uses colors, arrows, and symbols
 to make it easier to see how the gate changes the state vector in that layer.
 
