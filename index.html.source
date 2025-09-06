@@ -1938,10 +1938,10 @@ class Circuit {
                 // ---------- These ones need expanding:
                 case CP_SX:
                     if ( useGeneralizedGates ) {
+                        expandedListOfPartsForOneGate.push( icons[ CP_H ].circuitPartFactory() );
                         let cp = icons[ CP_HG ].circuitPartFactory();
                         cp.paramValues[ 1 ] = 90;
                         expandedListOfPartsForOneGate.push( cp );
-                        expandedListOfPartsForOneGate.push( icons[ CP_H ].circuitPartFactory() );
                     }
                     else {
                         expandedListOfPartsForOneGate.push( icons[ CP_H ].circuitPartFactory() );
@@ -1951,10 +1951,10 @@ class Circuit {
                     break;
                 case CP_invSX:
                     if ( useGeneralizedGates ) {
+                        expandedListOfPartsForOneGate.push( icons[ CP_H ].circuitPartFactory() );
                         let cp = icons[ CP_HG ].circuitPartFactory();
                         cp.paramValues[ 1 ] = -90;
                         expandedListOfPartsForOneGate.push( cp );
-                        expandedListOfPartsForOneGate.push( icons[ CP_H ].circuitPartFactory() );
                     }
                     else {
                         expandedListOfPartsForOneGate.push( icons[ CP_H ].circuitPartFactory() );
@@ -1970,8 +1970,8 @@ class Circuit {
                         expandedListOfPartsForOneGate.push( cp );
                     }
                     else {
-                        expandedListOfPartsForOneGate.push( icons[ CP_H ].circuitPartFactory() );
                         expandedListOfPartsForOneGate.push( icons[ CP_Z ].circuitPartFactory() );
+                        expandedListOfPartsForOneGate.push( icons[ CP_H ].circuitPartFactory() );
 
                         let cp = icons[ CP_GP ].circuitPartFactory();
                         cp.paramValues[ 0 ] = 45;
@@ -1980,16 +1980,16 @@ class Circuit {
                     break;
                 case CP_invSY:
                     if ( useGeneralizedGates ) {
+                        expandedListOfPartsForOneGate.push( icons[ CP_H ].circuitPartFactory() );
+
                         let cp = icons[ CP_ZG ].circuitPartFactory();
                         cp.paramValues[ 0 ] = -45;
                         cp.paramValues[ 1 ] = -(180+45);
                         expandedListOfPartsForOneGate.push( cp );
-
-                        expandedListOfPartsForOneGate.push( icons[ CP_H ].circuitPartFactory() );
                     }
                     else {
-                        expandedListOfPartsForOneGate.push( icons[ CP_Z ].circuitPartFactory() );
                         expandedListOfPartsForOneGate.push( icons[ CP_H ].circuitPartFactory() );
+                        expandedListOfPartsForOneGate.push( icons[ CP_Z ].circuitPartFactory() );
 
                         let cp = icons[ CP_GP ].circuitPartFactory();
                         cp.paramValues[ 0 ] = - 45;
@@ -2006,12 +2006,12 @@ class Circuit {
                     else // circuitPartID === CP_XE
                         exponentParameter = circuitPart.paramValues[ 0 ];
                     if ( useGeneralizedGates ) {
+                        expandedListOfPartsForOneGate.push( icons[ CP_H ].circuitPartFactory() );
+
                         let cp = icons[ CP_HG ].circuitPartFactory();
                         cp.paramValues[ 0 ] = 0;
                         cp.paramValues[ 1 ] = exponentParameter * 180;
                         expandedListOfPartsForOneGate.push( cp );
-
-                        expandedListOfPartsForOneGate.push( icons[ CP_H ].circuitPartFactory() );
                     }
                     else {
                         expandedListOfPartsForOneGate.push( icons[ CP_H ].circuitPartFactory() );
@@ -2035,7 +2035,7 @@ class Circuit {
                     if ( useGeneralizedGates ) {
                         let cp = icons[ CP_HG ].circuitPartFactory();
                         cp.paramValues[ 0 ] = 0;
-                        cp.paramValues[ 1 ] = - 90;
+                        cp.paramValues[ 1 ] = 90;
                         expandedListOfPartsForOneGate.push( cp );
                         cp = icons[ CP_HG ].circuitPartFactory();
                         cp.paramValues[ 0 ] = 0;
@@ -2043,14 +2043,14 @@ class Circuit {
                         expandedListOfPartsForOneGate.push( cp );
                         cp = icons[ CP_HG ].circuitPartFactory();
                         cp.paramValues[ 0 ] = 0;
-                        cp.paramValues[ 1 ] = 90;
+                        cp.paramValues[ 1 ] = - 90;
                         expandedListOfPartsForOneGate.push( cp );
 
                         expandedListOfPartsForOneGate.push( icons[ CP_H ].circuitPartFactory() );
                     }
                     else {
                         expandedListOfPartsForOneGate.push( icons[ CP_H ].circuitPartFactory() );
-                        expandedListOfPartsForOneGate.push( icons[ CP_invSZ ].circuitPartFactory() );
+                        expandedListOfPartsForOneGate.push( icons[ CP_SZ ].circuitPartFactory() );
                         expandedListOfPartsForOneGate.push( icons[ CP_H ].circuitPartFactory() );
 
                         let cp = icons[ CP_ZE ].circuitPartFactory();
@@ -2058,19 +2058,19 @@ class Circuit {
                         expandedListOfPartsForOneGate.push( cp );
 
                         expandedListOfPartsForOneGate.push( icons[ CP_H ].circuitPartFactory() );
-                        expandedListOfPartsForOneGate.push( icons[ CP_SZ ].circuitPartFactory() );
+                        expandedListOfPartsForOneGate.push( icons[ CP_invSZ ].circuitPartFactory() );
                         expandedListOfPartsForOneGate.push( icons[ CP_H ].circuitPartFactory() );
                     }
                     break;
                 case CP_RX:
                     if ( useGeneralizedGates ) {
                         let cp = icons[ CP_HG ].circuitPartFactory();
-                        cp.paramValues[ 0 ] = 0;
-                        cp.paramValues[ 1 ] = circuitPart.paramValues[ 0 ];
-                        expandedListOfPartsForOneGate.push( cp );
-                        cp = icons[ CP_HG ].circuitPartFactory();
                         cp.paramValues[ 0 ] = - circuitPart.paramValues[ 0 ] /2;
                         cp.paramValues[ 1 ] = - circuitPart.paramValues[ 0 ] /2;
+                        expandedListOfPartsForOneGate.push( cp );
+                        cp = icons[ CP_HG ].circuitPartFactory();
+                        cp.paramValues[ 0 ] = 0;
+                        cp.paramValues[ 1 ] = circuitPart.paramValues[ 0 ];
                         expandedListOfPartsForOneGate.push( cp );
                     }
                     else {
@@ -2090,8 +2090,12 @@ class Circuit {
                 case CP_RY:
                     if ( useGeneralizedGates ) {
                         let cp = icons[ CP_HG ].circuitPartFactory();
+                        cp.paramValues[ 0 ] = - circuitPart.paramValues[ 0 ] /2;
+                        cp.paramValues[ 1 ] = - circuitPart.paramValues[ 0 ] /2;
+                        expandedListOfPartsForOneGate.push( cp );
+                        cp = icons[ CP_HG ].circuitPartFactory();
                         cp.paramValues[ 0 ] = 0;
-                        cp.paramValues[ 1 ] = - 90;
+                        cp.paramValues[ 1 ] = 90;
                         expandedListOfPartsForOneGate.push( cp );
                         cp = icons[ CP_HG ].circuitPartFactory();
                         cp.paramValues[ 0 ] = 0;
@@ -2099,16 +2103,12 @@ class Circuit {
                         expandedListOfPartsForOneGate.push( cp );
                         cp = icons[ CP_HG ].circuitPartFactory();
                         cp.paramValues[ 0 ] = 0;
-                        cp.paramValues[ 1 ] = 90;
-                        expandedListOfPartsForOneGate.push( cp );
-                        cp = icons[ CP_HG ].circuitPartFactory();
-                        cp.paramValues[ 0 ] = - circuitPart.paramValues[ 0 ] /2;
-                        cp.paramValues[ 1 ] = - circuitPart.paramValues[ 0 ] /2;
+                        cp.paramValues[ 1 ] = - 90;
                         expandedListOfPartsForOneGate.push( cp );
                     }
                     else {
                         expandedListOfPartsForOneGate.push( icons[ CP_H ].circuitPartFactory() );
-                        expandedListOfPartsForOneGate.push( icons[ CP_invSZ ].circuitPartFactory() );
+                        expandedListOfPartsForOneGate.push( icons[ CP_SZ ].circuitPartFactory() );
                         expandedListOfPartsForOneGate.push( icons[ CP_H ].circuitPartFactory() );
 
                         let cp = icons[ CP_ZE ].circuitPartFactory();
@@ -2116,7 +2116,7 @@ class Circuit {
                         expandedListOfPartsForOneGate.push( cp );
 
                         expandedListOfPartsForOneGate.push( icons[ CP_H ].circuitPartFactory() );
-                        expandedListOfPartsForOneGate.push( icons[ CP_SZ ].circuitPartFactory() );
+                        expandedListOfPartsForOneGate.push( icons[ CP_invSZ ].circuitPartFactory() );
                         expandedListOfPartsForOneGate.push( icons[ CP_H ].circuitPartFactory() );
 
                         cp = icons[ CP_GP ].circuitPartFactory();

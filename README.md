@@ -85,7 +85,7 @@ and
 
 The icons/ folder contains image files in png format, and a Makefile that converts the png files to a base64 plain text encoding that is then quoted and saved into .txt files.
 The .txt files can be easily included in javascript source files.
-The .txt files are provided in the github repository for convenience,
+The generated .txt files are provided in the github repository for convenience,
 however developers who edit the png files will need to run the Makefile to regenerate the .txt files.
 
 The root folder contains a Makefile that includes the muqcs.js and icons/*.txt files into the index.html.source file and outputs the final index.html file.
