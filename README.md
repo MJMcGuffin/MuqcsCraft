@@ -13,7 +13,7 @@ making it easy to bookmark or share circuits just by copying the URL.
 
 Below the circuit, MuqcsCraft can show the state vector layer-by-layer.
 For certain gates
-(namely, the $H$, $X$, $Y$, $Z$,
+(namely, the Hadamard, Pauli $X$, $Y$, $Z$,
 $S = Z^{1/2}$, $S^{-1} = Z^{-1/2}$,
 $T = Z^{1/4}$, $T^{-1} = Z^{-1/4}$,
 Phase($\theta$) $= Z^{\theta/\pi}$, GlobalPhase($\theta$),
@@ -28,10 +28,10 @@ can be replaced with equivalent sequences of gates using an 'Expand Circuit' but
 The toolbar in MuqcsCraft includes so-called <em>generalized gates</em> (generalized $Z$, generalized $Y$, and generalized Hadamard),
 which are not standard, but are well suited for visualization with difference highlighting,
 and whose use allows the 'Expand Circuit' button to produce shorter sequences.
-The 'Expand Circuit' button is further explained in the companion video and paper.
+This is further explained in the companion video and paper.
 
 The definitions of the matrices for all the gates, including the generalized gates,
-are available at
+are available
 <a href="https://github.com/MJMcGuffin/muqcs.js?tab=readme-ov-file#matrix-definitions">here</a>.
 
 
@@ -56,6 +56,13 @@ B: state vector, layer-by-layer, with difference highlighting.
 
 Above: one iteration of Grover's algorithm.
 
+MuqcsCraft also has features to export circuits to
+<a href="https://algassert.com/quirk">Quirk</a>
+and to
+<a href="https://quantum.ibm.com/composer/">IBM Quantum Composer</a>.
+
+
+
 
 
 ## Companion Video
@@ -79,7 +86,7 @@ and
 The icons/ folder contains image files in png format, and a Makefile that converts the png files to a base64 plain text encoding that is then quoted and saved into .txt files.
 The .txt files can be easily included in javascript source files.
 The .txt files are provided in the github repository for convenience,
-however developers who edit the png files will need to run the Makefile to regenrate the .txt files.
+however developers who edit the png files will need to run the Makefile to regenerate the .txt files.
 
 The root folder contains a Makefile that includes the muqcs.js and icons/*.txt files into the index.html.source file and outputs the final index.html file.
 Search for SIMPLE_INCLUDE inside the index.html.source file to find where these inclusions happen.
