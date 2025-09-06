@@ -23,7 +23,9 @@ the state vector is shown with <em>difference highlighting</em>,
 which uses colors, arrows, and symbols
 to make it easier to see how the gate changes the state vector in that layer.
 
-Below is an example circuit showing off several features of MuqcsCraft.
+![Example 1](/doc/screenshot-teaser.png)
+
+Above: an example circuit showing off several features of MuqcsCraft.
 A: circuit diagram. B: toolbar from which gates can be dragged.
 C: reduced state of each qubit.
 D: state vectors with difference highlighting.
@@ -31,18 +33,16 @@ E: bits of the base states.
 F: half-matrix showing information about each pair of qubits.
 G: tooltip.
 
+![Example 2](/doc/screenshot-W4.png)
 
-![Example 1](/doc/screenshot-teaser.png)
-
-Below is a circuit that generates a W-4 state.
+Above: a circuit that generates a W-4 state.
 A: reduced state of each qubit, layer-by-layer.
 B: state vector, layer-by-layer, with difference highlighting.
 
-![Example 2](/doc/screenshot-W4.png)
-
-One iteration of Grover's algorithm:
 
 ![Example 3](/doc/screenshot-grover.png)
+
+Above: one iteration of Grover's algorithm.
 
 ## Companion Video
 
@@ -54,22 +54,25 @@ An academic paper about MuqcsCraft has been drafted and will be uploaded soon to
 
 ## Building the code
 
-The build process is simple but idiosyncratic.
-The developer is not an expert on modern web development tools, and so invented a way to build the code that works well with his computing environment.
+The build process is simple but idiosyncratic,
+and is designed to produce a single .html file containing all icon images embedded in the file.
 
 The util/ folder contains a Makefile to build two utilities:
 (1) a "quoter" written in C, which takes the contents of a file and outputs it as a quoted string, escaping characters as necessary,
 and
 (2) an "includer" written in perl, that can be used as a very simple text preprocessor to include the contents of one file in another, similar to #include statements in C code, by using SIMPLE_INCLUDE statements.
 
-The icons/ folder contains image files in png format, and a Makefile that converts the png files to a base64 plain text encoding that is then quoted.
+The icons/ folder contains image files in png format, and a Makefile that converts the png files to a base64 plain text encoding that is then quoted and saved into .txt files.
+The .txt files can be easily included in javascript source files.
+The .txt files are provided in the github repository for convenience,
+however developers who edit the png files will need to run the Makefile to regenrate the .txt files.
 
-The root folder contains a Makefile that includes the muqcs.js and icon files into the .html.source file and outputs the final .html file.
-Search for SIMPLE_INCLUDE inside the .html.source file.
+The root folder contains a Makefile that includes the muqcs.js and icons/*.txt files into the index.html.source file and outputs the final index.html file.
+Search for SIMPLE_INCLUDE inside the index.html.source file to find where these inclusions happen.
 
-So the .html.source file is the one that a programmer would normally edit to modify functionality before running make to build the .html file.
+So the index.html.source file is the one that a programmer would normally edit to modify functionality before running 'make' to build the index.html file.
 
-Search for "web analytics" inside the .html.source file to see how visits are logged without tracking personal information.
+Search for "web analytics" inside the index.html.source file to see how visits are logged without tracking personal information.
 
-The doc/ folder contains some diagrams that could be useful to understand the layout code.
+The doc/ folder contains some diagrams that could be useful to understand the layout source code.
 
