@@ -23,6 +23,18 @@ the state vector is shown with <em>difference highlighting</em>,
 which uses colors, arrows, and symbols
 to make it easier to see how the gate changes the state vector in that layer.
 
+Gates whose effects on the state vector cannot be visualized directly with difference highlighting
+can be replaced with equivalent sequences of gates using an 'Expand Circuit' button.
+The toolbar in MuqcsCraft includes so-called <em>generalized gates</em> (generalized $Z$, generalized $Y$, and generalized Hadamard),
+which are not standard, but are well suited for visualization with difference highlighting,
+and whose use allows the 'Expand Circuit' button to produce shorter sequences.
+The 'Expand Circuit' button is further explained in the companion video and paper.
+
+The definitions of the matrices for all the gates, including the generalized gates,
+are available at
+<a href="https://github.com/MJMcGuffin/muqcs.js?tab=readme-ov-file#matrix-definitions">here</a>.
+
+
 ![Example 1](/doc/screenshot-teaser.png)
 
 Above: an example circuit showing off several features of MuqcsCraft.
@@ -43,6 +55,8 @@ B: state vector, layer-by-layer, with difference highlighting.
 ![Example 3](/doc/screenshot-grover.png)
 
 Above: one iteration of Grover's algorithm.
+
+
 
 ## Companion Video
 
