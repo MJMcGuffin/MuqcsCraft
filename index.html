@@ -4704,6 +4704,8 @@ class Circuit {
                     else // circuitPartID === CP_YE
                         exponentParameter = circuitPart.paramValues[ 0 ];
                     if ( useGeneralizedGates ) {
+                        expandedListOfPartsForOneGate.push( icons[ CP_H ].circuitPartFactory() );
+
                         let cp = icons[ CP_HG ].circuitPartFactory();
                         cp.paramValues[ 0 ] = 0;
                         cp.paramValues[ 1 ] = 90;
@@ -4716,8 +4718,6 @@ class Circuit {
                         cp.paramValues[ 0 ] = 0;
                         cp.paramValues[ 1 ] = - 90;
                         expandedListOfPartsForOneGate.push( cp );
-
-                        expandedListOfPartsForOneGate.push( icons[ CP_H ].circuitPartFactory() );
                     }
                     else {
                         expandedListOfPartsForOneGate.push( icons[ CP_H ].circuitPartFactory() );
