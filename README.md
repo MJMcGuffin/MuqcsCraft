@@ -14,16 +14,22 @@ making it easy to bookmark or share circuits just by copying the URL.
 Below the circuit, MuqcsCraft can show the state vector layer-by-layer.
 For certain gates that appear alone in their layer
 (namely, the $H$, $X$, $Y$, $Z$,
-$S = \sqrt{Z}$, $S^{-1} = \sqrt{Z}^{-1}$,
-$T = \sqrt[4]{Z}$, $T^{-1} = \sqrt[4]{Z}^{-1}$,
+$S = Z^{1/2}$, $S^{-1} = Z^{-1/2}$,
+$T = Z^{1/4}$, $T^{-1} = Z^{-1/4}$,
 Phase($\theta$) $= Z^{\theta/\pi}$, GlobalPhase($\theta$),
 and SWAP gates, with arbitrary control and anticontrol qubits),
 the state vector is shown with <em>difference highlighting</em>,
 which uses colors, arrows, and symbols
 to make it easier to see how the gate changes the state vector in that layer.
 
+Below is an example circuit showing off several features of MuqcsCraft.
+A: circuit diagram. B: toolbar from which gates can be dragged.
+C: reduced state of each qubit.
+D: state vectors with difference highlighting.
+E: bits of the base states.
+F: half-matrix showing information about each pair of qubits.
+G: tooltip.
 
-Example circuit showing off several features of MuqcsCraft:
 
 ![Example 1](/doc/screenshot-teaser.png)
 
