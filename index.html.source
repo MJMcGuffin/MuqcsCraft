@@ -4458,6 +4458,10 @@ class CircuitViewer extends MyWidget {
             // draw the bit strings outside the cells
             draw2.setFillColor_array(DC_foreground);
             draw2.setStrokeColor_array(DC_highlight_wire);
+
+            // This is necessary because, without this shift, the bitstrings are sometimes drawn on top of diffvis visual feedback
+            let shift_x = ( stage < C.numStages ) ? PLV_space_w : 0;
+
             if ( true ) {
                 if ( SV_numCols===1 ) {
                     for ( let state = 0; state < C.stateVectors[ stage ]._rows; ++state ) {
@@ -4467,8 +4471,8 @@ class CircuitViewer extends MyWidget {
 
                         draw2.drawStringCenteredInRectangle(
                             new Box2(
-                                new Vec2( cell_x0+SV_cell_w, cell_y0 ),
-                                new Vec2( cell_x0+SV_cell_w+SV_cell_h*DispOpt.OUTSIDE_BITSTRING_ASPECTRATIO, cell_y0+SV_cell_h )
+                                new Vec2( cell_x0+SV_cell_w+shift_x, cell_y0 ),
+                                new Vec2( cell_x0+SV_cell_w+shift_x+SV_cell_h*DispOpt.OUTSIDE_BITSTRING_ASPECTRATIO, cell_y0+SV_cell_h )
                             ),
                             StringUtil.intToBinaryString( state, C.numWires ),
                             margin,
@@ -4487,8 +4491,8 @@ class CircuitViewer extends MyWidget {
 
                         draw2.drawStringCenteredInRectangle(
                             new Box2(
-                                new Vec2( cell_x0+SV_col_w, cell_y0 ),
-                                new Vec2( cell_x0+SV_col_w+SV_cell_h*DispOpt.OUTSIDE_BITSTRING_ASPECTRATIO, cell_y0+SV_cell_h )
+                                new Vec2( cell_x0+SV_col_w+shift_x, cell_y0 ),
+                                new Vec2( cell_x0+SV_col_w+shift_x+SV_cell_h*DispOpt.OUTSIDE_BITSTRING_ASPECTRATIO, cell_y0+SV_cell_h )
                             ),
                             StringUtil.intToBinaryString( r, SV_numRowBits ) + '…',
                             margin,
