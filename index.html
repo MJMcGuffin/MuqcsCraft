@@ -95,7 +95,7 @@ Additional options:
     See our paper for details.
     Hit the Back button in your browser to Undo.
     <br>
-    <label><input type='checkbox' id='useGeneralizedGatesCheckbox'>Use generalized gates when expanding.</label>
+    <label><input type='checkbox' id='useGeneralizedGatesCheckbox'>Use generalized gates in the expansion</label> to produce a shorter expansion.
 
     <p>
     <button onclick="printMagicButtonHandler()">Print Magic</button> Prints <a href="https://scholar.google.com/scholar?q=leone+Stabilizer+Renyi+Entropy">Second Stabilizer Rényi Entropy</a> of the output state to the console.
@@ -7125,13 +7125,12 @@ class CircuitViewer extends MyWidget {
 
         } // for state
 
-//ZZZ
         if ( drawTextOutsideCells ) {
             // draw the bit strings outside the cells
             draw2.setFillColor_array(DC_foreground);
             draw2.setStrokeColor_array(DC_highlight_wire);
 
-            // This is necessary because, without this shift, the bitstrings are drawn on top of diffvis visual feedback
+            // This is necessary because, without this shift, the bitstrings are sometimes drawn on top of diffvis visual feedback
             let shift_x = ( stage < C.numStages ) ? PLV_space_w : 0;
 
             if ( true ) {
