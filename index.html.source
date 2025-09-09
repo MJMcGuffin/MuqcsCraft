@@ -95,7 +95,7 @@ Additional options:
     See our paper for details.
     Hit the Back button in your browser to Undo.
     <br>
-    <label><input type='checkbox' id='useGeneralizedGatesCheckbox'>Use generalized gates when expanding.</label>
+    <label><input type='checkbox' id='useGeneralizedGatesCheckbox'>Use generalized gates in the expansion</label> to produce a shorter expansion.
 
     <p>
     <button onclick="printMagicButtonHandler()">Print Magic</button> Prints <a href="https://scholar.google.com/scholar?q=leone+Stabilizer+Renyi+Entropy">Second Stabilizer Rényi Entropy</a> of the output state to the console.
