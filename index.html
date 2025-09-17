@@ -4861,16 +4861,33 @@ class Circuit {
 
         this.stateVectorsAndStatsAreDirty = true;
     }
-    // recomputes the state vectors for each stage
-    run() {
-        this.stateVectors = []; // delete contents of array
-        this.perQubitStats = []; // delete contents of array
-        this.stateVectors[0] = CMatrix.tensorPower( Sim.ketZero, this.numWires );
-        for ( let s = 0; s < this.numStages; ++s ) {
-            // stateVectors[s] is the input to stage s of the circuit,
-            // and stateVectors[s+1] is the output
+    // Can be used to simulate forward or backward or both
+    //     To simulate forward from the first state vector, the caller could do
+    //         this.computeStateVectorsLayerByLayer( this.stateVectors, 0, this.numStages );
+    //     To simulate back, and forward, from layer i, and store in alternative state vectors,
+    //     the caller could do
+    //         this.computeStateVectorsLayerByLayer( this.altStateVectors, i, 0 );
+    //         this.computeStateVectorsLayerByLayer( this.altStateVectors, i, this.numStages );
+    computeStateVectorsLayerByLayer(
+        arrayOfStateVectors,
+        startLayer, // between 0 and numStages; we assume the state vector for this layer is already computed
+        endLayer  // between 0 and numStages; this is the last layer whose state vector is computed
+    ) {
+        Util.assert(
+            0 <= startLayer && startLayer <= this.numStages && 0 <= endLayer && endLayer <= this.numStages,
+            `unexpected condition in computeStateVectorsLayerByLayer(): ${startLayer},${endLayer},${this.numStages}`
+        );
+        let increment = ( endLayer >= startLayer ) ? +1 : -1;
+        let s = startLayer; // index of state vector that is already known
+        while ( true ) {
+            let s2 = s + increment; // index of next state vector to compute
+            let s3 = increment > 0 ? s : s2; // index of layer of circuit containing the gates that relate state vectors s and s2
 
-            this.stateVectors[s+1] = this.stateVectors[s].copy();
+            // From state vector s, we compute state vector s2, using the gates in layer s3 of the circuit
+            if ( s === endLayer || s2 < 0 || s2 > this.numStages )
+                break;
+
+            arrayOfStateVectors[s2] = arrayOfStateVectors[s].copy();
 
             // Collect info about control bits and swap gate
 
@@ -4880,7 +4897,7 @@ class Circuit {
             let max_w_of_swap_part = -1;
 
             for ( let w = 0; w < this.numWires; ++w ) {
-                let circuitPart_id = this.getCircuitPartIDOfCell(w,s);
+                let circuitPart_id = this.getCircuitPartIDOfCell(w,s3);
                 if ( circuitPart_id >= 0 ) {
                     if ( circuitPart_id === CP_CB || circuitPart_id === CP_ACB ) {
                         listOfControlBits.push( circuitPart_id === CP_CB ? [w,true] : [w,false] );
@@ -4896,8 +4913,8 @@ class Circuit {
 
             // Implement each gate, except for the swap gate
             for ( let w = 0; w < this.numWires; ++w ) {
-                let circuitPart = this.cells[w][s];
-                let circuitPart_id = this.getCircuitPartIDOfCell(w,s);
+                let circuitPart = this.cells[w][s3];
+                let circuitPart_id = this.getCircuitPartIDOfCell(w,s3);
                 if ( circuitPart_id >= 0 && circuitPart_id < CP_NUM ) {
                     if (
                         circuitPart_id !== CP_I
@@ -4905,8 +4922,12 @@ class Circuit {
                         && circuitPart_id !== CP_ACB
                         && circuitPart_id !== CP_SWAP
                     ) {
-                        this.stateVectors[s+1] = Sim.qubitWiseMultiply(
-                            circuitPart.getMatrix(), w, this.numWires, this.stateVectors[s+1], listOfControlBits
+                        let U = circuitPart.getMatrix();
+                        if ( increment < 0 ) {
+                            U = U.conjugateTranspose();
+                        }
+                        arrayOfStateVectors[s2] = Sim.qubitWiseMultiply(
+                            U, w, this.numWires, arrayOfStateVectors[s2], listOfControlBits
                         );
                     }
                 }
@@ -4914,11 +4935,22 @@ class Circuit {
 
             // Implement swap gate
             if ( numSwapParts === 2 ) {
-                this.stateVectors[s+1] = Sim.applySwap(
-                    min_w_of_swap_part, max_w_of_swap_part, this.numWires, this.stateVectors[s+1], listOfControlBits
+                arrayOfStateVectors[s2] = Sim.applySwap(
+                    min_w_of_swap_part, max_w_of_swap_part, this.numWires, arrayOfStateVectors[s2], listOfControlBits
                 );
             }
-        }
+
+            s = s2;
+        } // while
+    }
+    // recomputes the state vectors for each stage
+    run() {
+        this.stateVectors = []; // delete contents of array
+        this.perQubitStats = []; // delete contents of array
+        this.stateVectors[0] = CMatrix.tensorPower( Sim.ketZero, this.numWires );
+
+        this.computeStateVectorsLayerByLayer( this.stateVectors, 0, this.numStages );
+
         let n = this.numWires;
         for ( let s = 0; s <= this.numStages; ++s ) {
             let SV = this.stateVectors[ s ];
