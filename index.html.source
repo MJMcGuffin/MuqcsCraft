@@ -227,14 +227,19 @@ Predefined circuits:
 
 <blockquote>
     <span id='g4' style="display:none">
-    <a href='?circuit={"cols":[["H"],["•","X"]]}'>Bell state</a> [<a href="https://en.wikipedia.org/wiki/Bell_state">reference</a>] <br/>
+    Bell states [<a href="https://en.wikipedia.org/wiki/Bell_state">reference</a>] <br/>
         <blockquote>
-        How does the correlation between the qubits change if we
+            There are four Bell states: Φ+, Φ-, Ψ+, Ψ-.
+            The first three are called triplet states.
+            Consider <a href='?circuit={"cols":[["H"],["•","X"]]}'>this circuit</a> that generates a Φ+ state
+            whose qubits are maximally correlated.
+            How does the correlation between the qubits change if we
             <a href='?circuit={"cols":[["H"],["•","X"],["X^¼","X^¼"]]}'>add X<sup>0.25</sup></a> gates at the end of both qubits?
             And what if we
             <a href='?circuit={"cols":[["H"],["•","X"],["X^¼","X^¼"],["X^¼","X^¼"]]}'>do that again</a>?
             <br/>
-            Now try <a href='?circuit={"cols":[["H"],["•","X"],["X^½","X^½"],[1,"Z"]]}'>this circuit</a>: how does the correlation between the qubits change if we
+            Now try <a href='?circuit={"cols":[["H"],["•","X"],["X^½","X^½"],[1,"Z"]]}'>this circuit</a> that generates a Ψ- state, also called a singlet state.
+            How does the correlation between the qubits change if we
             add X<sup>0.25</sup> gates at the end of both qubits?
         </blockquote>
     <a href='?circuit={"cols":[["H"],["•","X"],[1,"•","X"]]}'>GHZ state</a> [<a href="https://en.wikipedia.org/wiki/Greenberger%E2%80%93Horne%E2%80%93Zeilinger_state">reference</a>] <br/>
