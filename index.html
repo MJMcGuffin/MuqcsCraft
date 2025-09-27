@@ -147,7 +147,6 @@ State Vectors
    <!-- <label><input type='checkbox' datavar="showStateVectorsPerLayer">▶Show state vectors per layer</label> <br/> -->
    <label><input type='checkbox' datavar="allowMultipleColumns">Enable wrapping (multiple columns) within each state vector</label>
    <label><input type='checkbox' datavar="displayOutsideBitstring">Show bitstrings outside cells</label>
-   <label><input type='checkbox' datavar="displayCausalHighlighting">Causal highlighting</label>
    <br/>
    Show cells as ...
    <blockquote>
@@ -228,14 +227,19 @@ Predefined circuits:
 
 <blockquote>
     <span id='g4' style="display:none">
-    <a href='?circuit={"cols":[["H"],["•","X"]]}'>Bell state</a> [<a href="https://en.wikipedia.org/wiki/Bell_state">reference</a>] <br/>
+    Bell states [<a href="https://en.wikipedia.org/wiki/Bell_state">reference</a>] <br/>
         <blockquote>
-        How does the correlation between the qubits change if we
+            There are four Bell states: Φ+, Φ-, Ψ+, Ψ-.
+            The first three are called triplet states.
+            Consider <a href='?circuit={"cols":[["H"],["•","X"]]}'>this circuit</a> that generates a Φ+ state
+            whose qubits are maximally correlated.
+            How does the correlation between the qubits change if we
             <a href='?circuit={"cols":[["H"],["•","X"],["X^¼","X^¼"]]}'>add X<sup>0.25</sup></a> gates at the end of both qubits?
             And what if we
             <a href='?circuit={"cols":[["H"],["•","X"],["X^¼","X^¼"],["X^¼","X^¼"]]}'>do that again</a>?
             <br/>
-            Now try <a href='?circuit={"cols":[["H"],["•","X"],["X^½","X^½"],[1,"Z"]]}'>this circuit</a>: how does the correlation between the qubits change if we
+            Now try <a href='?circuit={"cols":[["H"],["•","X"],["X^½","X^½"],[1,"Z"]]}'>this circuit</a> that generates a Ψ- state, also called a singlet state.
+            How does the correlation between the qubits change if we
             add X<sup>0.25</sup> gates at the end of both qubits?
         </blockquote>
     <a href='?circuit={"cols":[["H"],["•","X"],[1,"•","X"]]}'>GHZ state</a> [<a href="https://en.wikipedia.org/wiki/Greenberger%E2%80%93Horne%E2%80%93Zeilinger_state">reference</a>] <br/>
@@ -4334,7 +4338,6 @@ class Circuit {
         this.cells = create2DArray( this.numWires, this.numStages, null );
         this.stateVectors = [];
         this.stateVectorsAndStatsAreDirty = true;
-        this.altStateVectorsAreDirty = true;
     }
     clear() {
         this.initializeToEmpty();
@@ -4376,7 +4379,6 @@ class Circuit {
         this.cells.push( create1DArray(this.numStages,null) );
         this.numWires ++;
         this.stateVectorsAndStatsAreDirty = true;
-        this.altStateVectorsAreDirty = true;
     }
     // inserts a stage before the given stage which can be in the range [0,numStages]
     insertStage(s) {
@@ -4387,7 +4389,6 @@ class Circuit {
         }
         this.numStages ++;
         this.stateVectorsAndStatsAreDirty = true;
-        this.altStateVectorsAreDirty = true;
     }
     addStageAtEnd() {
         this.insertStage( this.numStages );
@@ -4400,7 +4401,6 @@ class Circuit {
         this.cells.splice( this.numWires - numWiresToRemove, numWiresToRemove );
         this.numWires -= numWiresToRemove;
         this.stateVectorsAndStatsAreDirty = true;
-        this.altStateVectorsAreDirty = true;
     }
     removeStagesFromEnd( numStagesToRemove ) {
         let maxStagesThatCouldBeRemoved = this.numStages - this.MIN_STAGES;
@@ -4412,7 +4412,6 @@ class Circuit {
         }
         this.numStages -= numStagesToRemove;
         this.stateVectorsAndStatsAreDirty = true;
-        this.altStateVectorsAreDirty = true;
     }
     removeAllEmptyWiresAtEnd() {
         let numWiresToRemove = 0;
@@ -4423,7 +4422,6 @@ class Circuit {
         }
         this.removeWiresFromEnd( numWiresToRemove );
         this.stateVectorsAndStatsAreDirty = true;
-        this.altStateVectorsAreDirty = true;
     }
     copyStage(sourceStage,targetStage) {
         Util.assert(
@@ -4442,7 +4440,6 @@ class Circuit {
             this.cells[w][targetStage] = this.cells[w][sourceStage];
         }
         this.stateVectorsAndStatsAreDirty = true;
-        this.altStateVectorsAreDirty = true;
     }
     removeAllEmptyStages() {
         // find the first non-empty stage
@@ -4466,13 +4463,11 @@ class Circuit {
         }
         this.removeStagesFromEnd( this.numStages - targetStage );
         this.stateVectorsAndStatsAreDirty = true;
-        this.altStateVectorsAreDirty = true;
     }
     compactify() {
         this.removeAllEmptyWiresAtEnd();
         this.removeAllEmptyStages();
         this.stateVectorsAndStatsAreDirty = true;
-        this.altStateVectorsAreDirty = true;
     }
     // Adds the given part at the given wire and stage, or before the given stage by inserting a new stage.
     // If the boolean flag is false, the part is added *at* the given stage,
@@ -4495,7 +4490,6 @@ class Circuit {
         }
         this.cells[ wire ][ stage ] = circuitPart;
         this.stateVectorsAndStatsAreDirty = true;
-        this.altStateVectorsAreDirty = true;
     }
     getCellContents(wire,stage) {
         if ( wire < 0 || wire >= this.numWires || stage < 0 || stage >= this.numStages )
@@ -4517,7 +4511,6 @@ class Circuit {
             return;
         this.cells[ wire ][ stage ] = null;
         this.stateVectorsAndStatsAreDirty = true;
-        this.altStateVectorsAreDirty = true;
     }
     findFirstEmptyStageFollowedByOnlyEmptyStages() {
         let s = this.numStages;
@@ -4539,7 +4532,6 @@ class Circuit {
             this.addCircuitPart( icons[ listOfControlBits[i][1] ? CP_CB : CP_ACB ].circuitPartFactory(), listOfControlBits[i][0], s, false );
         }
         this.stateVectorsAndStatsAreDirty = true;
-        this.altStateVectorsAreDirty = true;
     }
     addSwapGate( wire1, wire2 ) {
         Util.assert(
@@ -4552,7 +4544,6 @@ class Circuit {
         this.addCircuitPart( icons[ CP_SWAP ].circuitPartFactory(), wire1, s, false );
         this.addCircuitPart( icons[ CP_SWAP ].circuitPartFactory(), wire2, s, false );
         this.stateVectorsAndStatsAreDirty = true;
-        this.altStateVectorsAreDirty = true;
     }
     expandCircuit( useGeneralizedGates ) {
 
@@ -4874,7 +4865,6 @@ class Circuit {
         }
 
         this.stateVectorsAndStatsAreDirty = true;
-        this.altStateVectorsAreDirty = true;
     }
     // Can be used to simulate forward or backward or both
     //     To simulate forward from the first state vector, the caller could do
@@ -4986,7 +4976,6 @@ class Circuit {
             }
         }
         this.stateVectorsAndStatsAreDirty = false;
-        this.altStateVectorsAreDirty = true;
     }
     runIfNecessary() {
         if ( this.stateVectorsAndStatsAreDirty )
@@ -5745,7 +5734,6 @@ DispOpt.allowMultipleColumns = true;
 DispOpt.displayOutsideBitstring = true;
 DispOpt.displayInsideBitstring = false;
 DispOpt.displayInsideProbability = true;
-DispOpt.displayCausalHighlighting = false;
 /*const*/ DispOpt.BARFUNCTION_PROBABILITY = 0;
 /*const*/ DispOpt.BARFUNCTION_MAGNITUDE = 1;
 /*const*/ DispOpt.BARFUNCTION_LOG_PROBABILITY = 2;
@@ -6511,14 +6499,11 @@ class CircuitViewer extends MyWidget {
         /*world*/ _x0, /*world*/ _y0,
         /*circuit*/ C, /*int*/ stage,
         /*bool*/ drawDiffVis,
-        /*bool*/ drawCausalHighlighting,
         /*bool*/ drawTextInsideCells,
         /*bool*/ drawTextOutsideCells,
         /*int, -1 for none*/ highlightedBit,
         /*float*/ alpha
     ) {
-        if ( C.altStateVectorsAreDirty ) drawCausalHighlighting = false;
-
         let diffvis_gateWire = -1;
         let diffvis_gateWire2 = -1;
         let show_diffvis_forXGate = false;
@@ -6812,14 +6797,6 @@ class CircuitViewer extends MyWidget {
             let circle_hand_angle = - C.stateVectors[ stage ].get(state,0).arg();
             let circle_hand_x = circle_x + circle_radius*Math.cos(circle_hand_angle);
             let circle_hand_y = circle_y + circle_radius*Math.sin(circle_hand_angle);
-            let alt_circle_hand_angle;
-            let alt_circle_hand_x;
-            let alt_circle_hand_y;
-            if ( drawCausalHighlighting ) {
-                alt_circle_hand_angle = - C.altStateVectors[ stage ].get(state,0).arg();
-                alt_circle_hand_x = circle_x + circle_radius*Math.cos(alt_circle_hand_angle);
-                alt_circle_hand_y = circle_y + circle_radius*Math.sin(alt_circle_hand_angle);
-            }
 
             let barcolor = DC_barcolor;
 
@@ -6904,33 +6881,11 @@ class CircuitViewer extends MyWidget {
                 barLength = ( Math.log2( probability ) - min_log2_probability ) / max_minus_min_log2_probability;
                 break;
             }
-            let alt_magnitude;
-            let alt_probability;
-            let alt_barLength;
-            if ( drawCausalHighlighting ) {
-                Util.assert( ! C.altStateVectorsAreDirty, "unexpected condition in drawStateVector(): altStateVectorsAreDirty" );
-                alt_magnitude = C.altStateVectors[ stage ].get(state,0).mag();
-                alt_probability = C.altStateVectors[ stage ].get(state,0).magSquared();
-                alt_barLength = alt_probability;
-                switch ( DispOpt.barFunction ) {
-                case DispOpt.BARFUNCTION_PROBABILITY:
-                    alt_barLength = alt_probability;
-                    break;
-                case DispOpt.BARFUNCTION_MAGNITUDE:
-                    alt_barLength = alt_magnitude;
-                    break;
-                case DispOpt.BARFUNCTION_LOG_PROBABILITY:
-                    alt_barLength = ( Math.log2( alt_probability ) - min_log2_probability ) / max_minus_min_log2_probability;
-                    break;
-                }
-            }
             if ( areCellsRectangular ) {
                 barLength *= SV_cell_w-SV_cell_h;
-                alt_barLength *= SV_cell_w-SV_cell_h;
             }
             else { // square shaped cell
                 barLength *= SV_cell_h;
-                alt_barLength *= SV_cell_h;
             }
 
             // draw bar inside the cell
@@ -6938,11 +6893,6 @@ class CircuitViewer extends MyWidget {
                 draw2.setFillColor(barcolor[0],barcolor[1],barcolor[2],alpha);
                 draw2.fillRect( _cell_x0, _cell_y0, barLength, SV_cell_h );
             }
-            if ( drawCausalHighlighting && alt_barLength > 0 ) {
-                draw2.setFillColor(DC_highlight_wire[0],DC_highlight_wire[1],DC_highlight_wire[2],alpha);
-                draw2.fillRect( _cell_x0, _cell_y0, alt_barLength, SV_cell_h/2 );
-            }
-//ZZZ
             // draw strings inside the cell
             if ( areCellsRectangular && drawTextInsideCells ) {
                 draw2.setFillColor_array(DC_foreground);
@@ -6982,12 +6932,6 @@ class CircuitViewer extends MyWidget {
                 draw2.drawCircle( circle_x, circle_y, circle_radius );
                 draw2.drawLine( circle_x, circle_y, circle_hand_x, circle_hand_y );
             }
-            if ( alt_barLength > 0 ) {
-                draw2.setStrokeColor_array(DC_highlight_wire);
-                draw2.drawLine( circle_x, circle_y, alt_circle_hand_x, alt_circle_hand_y );
-            }
-            draw2.setStrokeColor_array(DC_foreground);
-//ZZZ...
             // draw rectangle around the cell
             draw2.drawRect( _cell_x0, _cell_y0, SV_cell_w, SV_cell_h );
 
@@ -7546,7 +7490,7 @@ class CircuitViewer extends MyWidget {
                         if ( DispOpt.showStateVectorsPerLayer ) {
                             let drawTextInsideCells = (DispOpt.showVisOfAllLayers || (stage === PLV_stage || stage === PLV_stage+1)) && (DispOpt.displayInsideBitstring || DispOpt.displayInsideProbability);
                             let drawTextOutsideCells = ((stage === C.numStages) || (! DispOpt.showVisOfAllLayers && (stage === PLV_stage+1))) && DispOpt.displayOutsideBitstring;
-                            this.drawStateVector( PLV_SV_x0 + stage*( PLV_col_w + PLV_space_w ), PLV_SV_y0, C, stage, drawDiffVis, DispOpt.displayCausalHighlighting, drawTextInsideCells, drawTextOutsideCells, this.highlighted_wire, alpha );
+                            this.drawStateVector( PLV_SV_x0 + stage*( PLV_col_w + PLV_space_w ), PLV_SV_y0, C, stage, drawDiffVis, drawTextInsideCells, drawTextOutsideCells, this.highlighted_wire, alpha );
                         }
                     }
 
@@ -7616,33 +7560,6 @@ class CircuitViewer extends MyWidget {
                 + " mag:" + StringUtil.numToString( magnitude )
                 + " prob:" + StringUtil.numToString( probability )
                 + " phase:" + StringUtil.numToString( phase ) + "°";
-            if ( DispOpt.displayCausalHighlighting ) { // ZZZ
-                if (
-                    this.circuit.altStateVectorsAreDirty
-                    || this.circuit.causalHighlighting_stage != this.highlighted_stage
-                    || this.circuit.causalHighlighting_baseState != this.highlighted_baseState
-                ) {
-                    Util.assert( ! this.circuit.stateVectorsAndStatsAreDirty, "Unexpected condition in drawTooltip(): state vectors are dirty" );
-                    this.circuit.causalHighlighting_stage = this.highlighted_stage;
-                    this.circuit.causalHighlighting_baseState = this.highlighted_baseState;
-                    this.circuit.altStateVectors = [];
-                    let j = this.circuit.causalHighlighting_stage;
-                    // just copy one amplitude
-                    this.circuit.altStateVectors[ j ] =  new CMatrix( 1 << this.circuit.numWires, 1 );
-                    this.circuit.altStateVectors[ j ].set(
-                        this.circuit.causalHighlighting_baseState, 0,
-                        this.circuit.stateVectors[ j ].get( this.circuit.causalHighlighting_baseState, 0 )
-                    );
-
-                    // compute the alternative state vectors in other layers by simulating forward and backward
-                    this.circuit.computeStateVectorsLayerByLayer( this.circuit.altStateVectors, j, this.circuit.numStages );
-                    this.circuit.computeStateVectorsLayerByLayer( this.circuit.altStateVectors, j, 0 );
-
-                    this.circuit.altStateVectorsAreDirty = false;
-//ZZZ
-console.log("things got updated!");
-                }
-            }
         }
         else if ( this.highlighted_mode === CVH_CIRCUIT ) {
             if ( this.highlighted_circuitPart !== null ) {
@@ -7836,7 +7753,6 @@ console.log("things got updated!");
                 newParamValue = paramInfo.maxValue;
             this.highlighted_circuitPart.paramValues[ this.highlighted_circuitPart_parameter ] = newParamValue;
             this.circuit.stateVectorsAndStatsAreDirty = true;
-            this.circuit.altStateVectorsAreDirty = true;
             this.updateURLIfNecessary( false );
 
             return {redraw:true, initiatesDragAndDrop:false, objectBeingDragged:null};
@@ -8654,7 +8570,6 @@ function keyDownHandler(e) {
                                 newParamValue = paramInfo.maxValue;
                             circuitPart.paramValues[ circuitViewer.selected_circuitPart_parameter ] = newParamValue;
                             circuitViewer.circuit.stateVectorsAndStatsAreDirty = true;
-                            circuitViewer.circuit.altStateVectorsAreDirty = true;
                             circuitViewer.updateURLIfNecessary( false );
                         }
                     }
