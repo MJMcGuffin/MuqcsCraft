@@ -238,7 +238,7 @@ Predefined circuits:
             And what if we
             <a href='?circuit={"cols":[["H"],["•","X"],["X^¼","X^¼"],["X^¼","X^¼"]]}'>do that again</a>?
             <br/>
-            Now try <a href='?circuit={"cols":[["H"],["•","X"],["X^½","X^½"],[1,"Z"]]}'>this circuit</a> that generates a Ψ- state, also called a singlet state.
+            Now try <a href='?circuit={"cols":[["H","X"],["•","X"],[1,"Z"]]}'>this circuit</a> that generates a Ψ- state, also called a singlet state.
             How does the correlation between the qubits change if we
             add X<sup>0.25</sup> gates at the end of both qubits?
         </blockquote>
