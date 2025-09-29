@@ -59,7 +59,7 @@ Above: one iteration of Grover's algorithm.
 MuqcsCraft also has features to export circuits to
 <a href="https://algassert.com/quirk">Quirk</a>
 and to
-<a href="https://quantum.ibm.com/composer/">IBM Quantum Composer</a>.
+<a href="https://quantum.cloud.ibm.com/composer">IBM Quantum Composer</a>. <!-- previously https://quantum.ibm.com/composer/ -->
 
 
 
