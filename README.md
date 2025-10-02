@@ -67,11 +67,18 @@ and to
 
 ## Companion Video
 
-A video will be made to demonstrate MuqcsCraft's functionality.
+A video demonstrating MuqcsCraft's functionality:
+
+<a href="https://youtu.be/BCunU_gCXT4">View the video</a>
+
+
 
 ## Companion Paper
 
-An academic paper about MuqcsCraft has been drafted and will be uploaded soon to arxiv.
+A companion paper at <a href="https://arxiv.org/abs/2510.00895">https://arxiv.org/abs/2510.00895</a> explains the design and features of MuqcsCraft.
+Please cite that paper if you would like to cite the MuqcsCraft software in your own academic work.
+
+
 
 ## Building the code
 
