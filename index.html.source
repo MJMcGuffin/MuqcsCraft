@@ -53,7 +53,9 @@
 
 <p>
 Use <b>Left mouse button</b> to drag-and-drop a gate.
-<br/>
+To add a new qubit to the circuit, drag-and-drop any gate below the bottom qubit.
+
+<p>
 Some gates have parameters. To change a parameter, use Ctrl+left mouse button and drag left-right,
 or use Shift+left mouse button and drag left-right to snap the parameter to nice values.
 You can also click on a parameter to select it, and then use
@@ -2281,7 +2283,7 @@ class Circuit {
     run() {
         this.stateVectors = []; // delete contents of array
         this.perQubitStats = []; // delete contents of array
-        this.stateVectors[0] = CMatrix.tensorPower( Sim.ketZero, this.numWires );
+        this.stateVectors[0] = CMatrix.kronPower( Sim.ketZero, this.numWires );
 
         this.computeStateVectorsLayerByLayer( this.stateVectors, 0, this.numStages );
 
@@ -3059,7 +3061,7 @@ DispOpt.scrollPerLayerVisHorizontally = false;
 /*const*/ DispOpt.CELL_ASPECTRATIO_RECTANGULAR = 2.8; // 3.5;
 /*const*/ DispOpt.OUTSIDE_BITSTRING_ASPECTRATIO = 3;
 DispOpt.cell_aspectRatio = DispOpt.CELL_ASPECTRATIO_RECTANGULAR;
-DispOpt.allowMultipleColumns = true;
+DispOpt.allowMultipleColumns = false;
 DispOpt.displayOutsideBitstring = true;
 DispOpt.displayInsideBitstring = false;
 DispOpt.displayInsideProbability = true;
@@ -3728,7 +3730,7 @@ class CircuitViewer extends MyWidget {
             strings.push( "  Correlation=" + StringUtil.numToString(C.pairwiseCorrelations.get(row,col)._r,precision) );
             endpoints.push( this.transformPairwiseMatrixSpaceToWorldSpace( halfMatrixCenter_x0, halfMatrixCenter_y0, new Vec2(row+(1-C.normalizedPositionsOfGlyphs[qubit_i][qubit_j][3]),C.numWires-col-1) ) );
             tangents.push( new Vec2(1,1) );
-            if ( C.pairwiseCorrelations.get(row,col)._r >= 0 ) {
+            if ( C.pairwiseCorrelations.get(row,col)._r >= 0 || Number.isNaN( C.pairwiseCorrelations.get(row,col)._r ) ) {
                 arrow_foreground_colors.push( DC_HM_entanglement_pos );
                 arrow_background_colors.push( DC_HM_entanglement_pos );
             }
@@ -3792,7 +3794,7 @@ class CircuitViewer extends MyWidget {
             if ( DispOpt.HM_showCorrelation ) {
                 strings.push( "  Correlation=" + StringUtil.numToString(C.pairwiseCorrelations.get(row,col)._r,precision) );
                 endpoints.push( this.transformPairwiseMatrixSpaceToWorldSpace( halfMatrixCenter_x0, halfMatrixCenter_y0, new Vec2(row+1-(metricCounter+0.75)/(DispOpt.HM_numMetrics+0.5),C.numWires-col-1) ) );
-                if ( C.pairwiseCorrelations.get(row,col)._r >= 0 ) {
+                if ( C.pairwiseCorrelations.get(row,col)._r >= 0 || Number.isNaN( C.pairwiseCorrelations.get(row,col)._r ) ) {
                     arrow_foreground_colors.push( DC_HM_entanglement_pos );
                     arrow_background_colors.push( DC_HM_entanglement_pos );
                 }
@@ -4701,6 +4703,45 @@ class CircuitViewer extends MyWidget {
                 draw2.setLineWidth( 3 ); // TODO_lineWidth should be scale dependent so it's not super thick when we are zoomed out
                 draw2.setStrokeColor_array(DC_highlight_dropSite);
                 draw2.drawRect(this.drop_stage - (this.drop_insertBeforeTheGivenStage?0.5:0.0),this.drop_wire,1,1);
+
+
+                let isUserHoveringOnNewQubit = ( this.drop_wire===this.circuit.numWires );
+                draw2.setCoordinateSystemToPixels();
+                let p_pixels = draw2.convertWorldSpaceUnitsToPixels(
+                    new Vec2(
+                        isUserHoveringOnNewQubit
+                            ? this.drop_stage - (this.drop_insertBeforeTheGivenStage?0.5:0.0) // the text will snap to the same x coordinate as the drop target
+                            : mouse_x_world, // the text will follow the mouse cursor's x coordinate
+                        this.circuit.numWires
+                    )
+                );
+                let m = 5; // margin, in pixels
+                p_pixels.x += m;
+                p_pixels.y += m;
+                //if ( false ) {
+                //    let rect = new Box2(
+                //        new Vec2( p_pixels.x, p_pixels.y ),
+                //        new Vec2( p_pixels.x + FC_SIZE, p_pixels.y + FC_SIZE ),
+                //    );
+                //    draw2.setFillColor_array( isUserHoveringOnNewQubit ? DC_highlight_icon : DC_background2 );
+                //    draw2.fillRect(rect.min.x,rect.min.y,rect.width(),rect.height());
+                //    draw2.setStrokeColor_array( DC_foreground );
+                //    draw2.setLineWidth( 1 ); // TODO_lineWidth should be scale dependent so it's not super thick when we are zoomed out
+                //    draw2.drawRect(rect.min.x,rect.min.y,rect.width(),rect.height());
+                //    let center = rect.center();
+                //    let radius = 0.75 * FC_SIZE / 2;
+                //    draw2.drawLine( center.x-radius, center.y, center.x+radius, center.y );
+                //    draw2.drawLine( center.x, center.y-radius, center.x, center.y+radius );
+                //    p_pixels.x += FC_SIZE + m;
+                //}
+                draw2.setFillColor_array( DC_highlight_icon );
+                draw2.drawString(
+                    p_pixels.x, p_pixels.y + FC_SIZE,  // left extremity of the baseline of the string (near the lower-left corner of the string)
+                    (isUserHoveringOnNewQubit?"Drop here":"↓ Drag down lower ↓")+" to add new qubit",     // the string
+                    FC_SIZE, // the desired height
+                    TD_HORIZONTALLY_RIGHT
+                );
+                draw2.setCoordinateSystemToWorldSpaceUnits();
             }
         }
 

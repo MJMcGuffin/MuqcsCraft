@@ -12,13 +12,13 @@
 // from top to bottom, these might store (q2,q1,q0) = (0,1,1) to encode 3
 // or (q2,q1,q0) = (1,0,0) to encode 4.  Given these assumptions, there are
 // two ways to simulate the circuit, described below, that correspond to
-// different matrices and different orderings for tensor products.
+// different matrices and different orderings for Kronecker products.
 // Sometimes the terms "big-endian" or "little-endian" are used to refer
 // to choices related to this, but I haven't found clear definitions
 // or consistent usage of these terms.
 //
 // Common software convention:
-// - Tensor products are done in order of decreasing bit significance.
+// - Kronecker products are done in order of decreasing bit significance.
 //   https://quantumcomputing.stackexchange.com/questions/8244/big-endian-vs-little-endian-in-qiskit
 //   seems to confirm that Qiskit works this way.
 // - In a 2-qubit circuit, if we have a 2-qubit gate where q0 is a control
@@ -36,12 +36,12 @@
 //   and https://algassert.com/post/1707 further discusses this.
 //
 // Textbook convention:
-// - Tensor products are done in order of increasing bit significance.
+// - Kronecker products are done in order of increasing bit significance.
 //   This seems to match when
 //   https://qiskit.org/documentation/tutorials/circuits/3_summary_of_quantum_operations.html#Basis-vector-ordering-in-Qiskit
 //   states "Within the physics community, the qubits of a multi-qubit systems
 //   are typically ordered with the first qubit on the left-most side of the
-//   tensor product and the last qubit on the right-most side."
+//   Kronecker product and the last qubit on the right-most side."
 // - The same 4x4 matrix mentioned earlier, with q0 acting as a control bit,
 //   would now be [1 0 0 0; 0 1 0 0; 0 0 a b; 0 0 c d] which is how they
 //   are usually presented in textbooks on quantum computing.
@@ -498,9 +498,9 @@ class CMatrix {
         }
         else Util.assert(false,"CMatrix.mult(): unknown type");
     }
-    // The kronecker product, or tensor product, of two matrices.
-    static tensor(a,b,isReversed=false) {
-        Util.assert(a instanceof CMatrix && b instanceof CMatrix,"CMatrix.tensor(): wrong type");
+    // The Kronecker product (often informally called the tensor product) of two matrices.
+    static kron(a,b,isReversed=false) {
+        Util.assert(a instanceof CMatrix && b instanceof CMatrix,"CMatrix.kron(): wrong type");
         if ( isReversed ) {
             let tmp = a;
             a = b;
@@ -556,16 +556,16 @@ class CMatrix {
         // console.log("totalCost: " + totalCost);
         return list[0];
     }
-    // Imagine you want to form the tensor product of many matrices m1 x m2 x ... mN
+    // Imagine you want to form the Kronecker product of many matrices m1 x m2 x ... mN
     // You can obtain this product by calling the below routine with argument [m1,m2,...,mN]
     //
-    // Since the tensor product is associative, we have a choice of computing the product
+    // Since the Kronecker product is associative, we have a choice of computing the product
     // starting with whatever matrices we like.
     // It turns out to be more efficient to compute the product of smaller matrices first.
     // So, this routine searches through the given list for the consecutive pair
     // of smallest matrices, replaces them with their product, and repeats.
-    static naryTensor( list, isReversed=false ) {
-        Util.assert( list.length>0 && list[0] instanceof CMatrix, "CMatrix.naryTensor(): invalid input" );
+    static naryKron( list, isReversed=false ) {
+        Util.assert( list.length>0 && list[0] instanceof CMatrix, "CMatrix.naryKron(): invalid input" );
         if ( isReversed ) {
             list.reverse();
         }
@@ -585,20 +585,20 @@ class CMatrix {
             let a = list[ indexForLowestCost ];
             let b = list[ indexForLowestCost + 1 ];
             // replace the ith and (i+1)th matrices with their product
-            list.splice( indexForLowestCost, 2, CMatrix.tensor(a,b) );
+            list.splice( indexForLowestCost, 2, CMatrix.kron(a,b) );
             // totalCost += lowestCost;
         }
         // console.log("totalCost: " + totalCost);
         return list[0];
     }
     // TODO This should be improved using exponentiation by squaring or binary exponentiation, and something similar could be done for a power() method that raises a matrix to a given exponent
-    static tensorPower( matrix, exponent ) {
-        Util.assert( exponent>0 && matrix instanceof CMatrix, "CMatrix.naryTensor(): invalid input" );
+    static kronPower( matrix, exponent ) {
+        Util.assert( exponent>0 && matrix instanceof CMatrix, "CMatrix.kronPower(): invalid input" );
         let list = [];
         for ( let i = 0; i < exponent; ++i ) {
             list.push( matrix );
         }
-        return CMatrix.naryTensor( list );
+        return CMatrix.naryKron( list );
     }
 
     // If the caller needs to know Trace(A * B),
@@ -930,10 +930,10 @@ class Sim { // Simulator
             //             |    |                   |          |
             //   q_{j-i} --+----+--       q_{j-i} --X----------X--
             //
-            let swapStep = CMatrix.tensor( Sim.SWAP(0,numInnerWires,numInnerWires+1), Sim.I, usingTextbookConvention );
+            let swapStep = CMatrix.kron( Sim.SWAP(0,numInnerWires,numInnerWires+1), Sim.I, usingTextbookConvention );
             m2 = CMatrix.naryMult( [
                 swapStep,
-                CMatrix.tensor( CMatrix.identity(2**numInnerWires), m1, usingTextbookConvention ),
+                CMatrix.kron( CMatrix.identity(2**numInnerWires), m1, usingTextbookConvention ),
                 swapStep
             ] );
         }
@@ -942,11 +942,11 @@ class Sim { // Simulator
         }
 
         // Step 3: if there are wires before i, and/or after j,
-        // we must perform a tensor product with an appropriately sized identity matrix,
+        // we must perform a Kronecker product with an appropriately sized identity matrix,
         // either before and/or after m2, respectively.
-        // Rather than do these tensor products separately here,
-        // we put the relevant matrices in a list and let naryTensor()
-        // perform the tensor products in the optimal associative order.
+        // Rather than do these Kronecker products separately here,
+        // we put the relevant matrices in a list and let naryKron()
+        // perform the Kronecker products in the optimal associative order.
         //
         let listOfMatrices = [ m2 ];
         let numWiresBefore = i;
@@ -957,7 +957,7 @@ class Sim { // Simulator
         if ( numWiresAfter > 0 ) {
             listOfMatrices.unshift( CMatrix.identity(2**numWiresAfter) ); // insert at beginning of list
         }
-        let m3 = CMatrix.naryTensor( listOfMatrices, usingTextbookConvention  );
+        let m3 = CMatrix.naryKron( listOfMatrices, usingTextbookConvention  );
 
         return m3;
     }
@@ -966,12 +966,12 @@ class Sim { // Simulator
     // where I is the 2×2 identity matrix, U is a given 2×2 matrix,
     // |stateVector> is a (2^n)×1 column vector, and the return value is
     // another column vector of the same size.
-    // The tensor product in parentheses has n factors, and would
+    // The Kronecker product in parentheses has n factors, and would
     // result in a matrix of size (2^n)×(2^n) if evaluated explicitly.
-    // U is at a position in the tensor product given by i_w,
+    // U is at a position in the Kronecker product given by i_w,
     // with i_w=0 or i_w=n-1 indicating that U
     // is the right-most or left-most factor, respectively.
-    // The algorithm avoids explicitly computing the tensor product
+    // The algorithm avoids explicitly computing the Kronecker product
     // in parentheses, and takes O(2^n) time.
     // Control bits and anti-control bits limit the effect of U
     // to a subset of the amplitudes in |stateVector>.
@@ -1553,20 +1553,22 @@ class Sim { // Simulator
         }
     }
 
-    // Returns a matrix of size (n)x(n), whose upper triangular half contains correlation values for pairs of qubits.
-    // Each cell (row=i,column=j) of the matrix contains a real number in [-1,1] describing the correlation between qubits i,j
-    // (where i>j).
+    // Returns a matrix of size (n)x(n), whose upper triangular half contains correlation values
+    // for pairs of qubits.
+    // Each cell (row=i,column=j) of the matrix contains a real number in [-1,1]
+    // equal to the correlation between qubits i,j in the computational basis, where i > j.
     // The values -1, 0, +1 correspond to perfectly inverse correlation (i.e., when measured, qubits i,j always have opposite values),
     // uncorrelated, and perfectly positive correlation (i.e., when measured, the two qubits are always equal), respectively.
+    // If one of the qubits always yields the same result upon measurement, then correlation is not defined
+    // and the corresponding value in the returned matrix will be NaN.
     // The diagonal and lower triangular half of the returned matrix contain zeros.
     // 
     // 
-    // 
-    // How to compute the correlation between two qubits:
+    // To compute the correlation between two qubits, in the computational basis:
     // 
     // Consider two qubits X and Y, each of which is measured to have
     // a value of either L (for Low) or H (for High).
-    // (Later, we will consider (L,H)=(-1,+1) or (L,H)=(0,1).)
+    // (E.g., maybe (L,H)=(-1,+1) or (L,H)=(0,1).)
     // Define the four probabilities
     //     a = P((X,Y)=(L,L)) = P(X=L and Y=L)
     //     b = P((X,Y)=(L,H))
@@ -1574,89 +1576,19 @@ class Sim { // Simulator
     //     d = P((X,Y)=(H,H))
     // 
     // where a+b+c+d=1.
-    // https://en.wikipedia.org/wiki/Correlation
-    // explains that
-    // 
-    //     correlation(X,Y)
-    //       = covariance(X,Y) / (sigma_X sigma_Y)
-    //       = ( E(XY) - E(X)E(Y) ) / (sigma_X sigma_Y)
-    // 
-    // where sigma_X = sqrt(E(X^2) - E(X)^2)
-    // and similarly for sigma_Y.
-    // Thus
-    //     covariance(X,Y)
-    //       = E(XY) - E(X)E(Y)
-    //       = aLL + bLH + cHL + dHH - ((a+b)L+(c+d)H) ((a+c)L+(b+d)H)
-    //       = aLL+bLH+cHL+dHH - (aL+bL+cH+dH)(aL+cL+bH+dH)
-    //       = aLL+bLH+cHL+dHH - (aaLL+abLL+acLL+bcLL + abLH+acLH+2adLH+bbLH+bdLH+ccLH+cdLH + bcHH+bdHH+cdHH+ddHH)
-    // 
-    // If we set (L,H)=(-1,+1), then sigma_X = sigma_Y = 1,
-    // and
-    //     covariance(X,Y)
-    //       = a-b-c+d - (aa+ab+ac+bc - ab-ac-2ad-bb-bd-cc-cd + bc+bd+cd+dd)
-    //       = a-b-c+d - (aa+2bc -2ad-bb-cc +dd)
-    //       = a+d-b-c - (aa+dd+2bc-2ad-bb-cc)
-    //     correlation(X,Y)
-    //       = a+d-b-c - (aa+dd+2bc-2ad-bb-cc)
-    // Recall that a=1-b-c-d. Substituting, we find
-    //     correlation(X,Y)
-    //       = (1-b-c-d)+d-b-c - ((1-b-c-d)^2+dd+2bc-2(1-b-c-d)d-bb-cc)
-    //       = 1-2b-2c - ((1-b-c-d)^2+dd+2bc -2(d-bd-cd-dd) -bb-cc)
-    //       = 1-2b-2c+2d +bb-2bc-2bd+cc-2cd-3dd - ((1-b-c-d)^2) 
-    //       = 1-2b-2c+2d +bb-2bc-2bd+cc-2cd-3dd - (1-2b-2c-2d+bb+2bc+2bd+cc+2cd+dd)
-    //       = 4d -4bc-4bd-4cd-4dd
-    //       = 4(d-bd-cd-dd -bc)
-    //       = 4((1-b-c-d)d -bc)
-    //       = 4(ad-bc)    [1]
-    // 
-    // As a sanity check, set (L,H)=(0,1),
-    // then sigma_X = sigma_Y = sqrt(0.5-0.5^2)=0.5,
-    // and
-    //     covariance(X,Y) = d - (bc+bd+cd+dd)
-    //     correlation(X,Y)
-    //       = (d - (bc+bd+cd+dd))/(0.5 0.5)
-    //       = 4 (d - (bc+bd+cd+dd))
-    //       = 4 (d - dd - bc - bd - cd)
-    //       = 4( d - bc - (b+c+d)d )
-    //       = 4( d - bc - (1-a)d )
-    //       = 4( ad - bc )   [2]
-    // We see that equation [2] is equivalent to [1].
-    // 
-    // As another sanity check, consider
-    // the symmetrical situation
-    // a=d and b=c, and define p=a=d.
-    // Then b=c=0.5-p, and [2] yields
-    //     correlation(X,Y)
-    //       = 4( p^2 - (0.5-p)^2 )
-    //       = 4( p^2 - 0.25+p-p^2 )
-    //       = 4( -0.25+p )
-    //       = 4p - 1
-    // which yields -1,0,1, for p=0,0.25,0.5, respectively,
-    // as expected.
-    // 
-    // As another sanity check, consider
-    // the case b=c=0 (hence a+d=1).
-    // Then [2] yields
-    //     correlation(X,Y)
-    //       = 4ad
-    // which reaches a maximum of 1 when a=d=0.5.
-    // Alternatively, consider the case a=d=0
-    // (hence b+c=1), then [2] yields
-    //     correlation(X,Y) = -4bc
-    // which has a minimum of -1 when b=c=0.5
-    // 
-    // As another sanity check, consider the case
-    // where X and Y are independent, with
-    // probabilities
-    //     p = P(X=H)
-    //     q = P(Y=H)
-    // Then P(X=L)=(1-p), P(Y=L)=(1-q),
-    // a=(1-p)(1-q), b=(1-p)q, c=p(1-q), d=pq,
-    // and we find
-    //     correlation(X,Y)
-    //       = 4( (1-p)(1-q)pq - (1-p)qp(1-q) )
-    //       = 0
-    // as expected.
+    // It can be shown that the covariance between the two qubits is
+    //     (H-L)^2 (ad-bc)    bounded by ±(1/4)(H-L)^2
+    // and the correlation is
+    //     (ad-bc) / sqrt( (a+b)(c+d)(a+c)(b+d) )   bounded by ±1
+    // Sanity checks:
+    //     If b=c=0, correlation is 1 (except if there is division by zero)
+    //     If a=d=0, correlation is -1 (except if there is division by zero)
+    //     If a=d and b=c, correlation is 4(a^2-(1/2-a)^2)= 4a-1 = 1-4b
+    //        which yields -1,0,1 for a=0,0.25,0.5, respectively.
+    //     If the two qubits are independent, where the first is H with probability p
+    //        and the second is H with probability q,
+    //        then a=(1-p)(1-q), b=(1-p)q, c=p(1-q), d=pq,
+    //        correlation = 0 (except if there is division by zero)
     // 
     static computePairwiseQubitCorrelations(
         n, // number of qubits in the circuit
@@ -1681,9 +1613,17 @@ class Sim { // Simulator
                     let bit_j = (k>>j) & 1;
                     p[ bit_i ][ bit_j ] += baseStateProbabilities.get(k,0)._r;
                 }
-                let correlation = 4*( p[0][0]*p[1][1] - p[0][1]*p[1][0] );
+                let a = p[0][0];
+                let b = p[0][1];
+                let c = p[1][0];
+                let d = p[1][1];
+                let correlation = NaN;
+                let denominator = (a+b)*(c+d)*(a+c)*(b+d);
+                if ( denominator > 0 ) {
+                    correlation = ( a*d - b*c ) / Math.sqrt( denominator );
+                }
                 result.set( i, j, correlation );
-                //console.log(`${i},${j}: `+StringUtil.numToString(p[0][0])+"+"+StringUtil.numToString(p[0][1])+"+"+StringUtil.numToString(p[1][0])+"+"+StringUtil.numToString(p[1][1])+"="+StringUtil.numToString(p[0][0]+p[0][1]+p[1][0]+p[1][1])+", diff="+StringUtil.numToString(correlation));
+                //console.log(`${i},${j}: `+StringUtil.numToString(p[0][0])+"+"+StringUtil.numToString(p[0][1])+"+"+StringUtil.numToString(p[1][0])+"+"+StringUtil.numToString(p[1][1])+"="+StringUtil.numToString(p[0][0]+p[0][1]+p[1][0]+p[1][1])+", corr="+StringUtil.numToString(correlation));
             }
         }
         //console.log("Pairwise correlations appear in upper triangular half:\n" + result.toString());
@@ -1749,7 +1689,7 @@ class Sim { // Simulator
         Util.assert( arrayOfAll4x4ReducedDensityMatrices.length===(n*(n-1)/2), "Sim.computePairwiseQubitConcurrences(): array of matrices has invalid size" );
 
         let result = new CMatrix(n,n);
-        let Y_tensor_Y = CMatrix.tensor(Sim.Y,Sim.Y);
+        let Y_tensor_Y = CMatrix.kron(Sim.Y,Sim.Y);
         for ( let i=0; i <= n-2; ++i ) {
             for ( let j=i+1; j <= n-1; ++j ) {
 
@@ -1883,19 +1823,19 @@ class Sim { // Simulator
     // on subsequent calls, the cache is used and the stack makes no difference.
     //
     // The computation is based on
-    //     Leone, Oliviero, Hamma (2022) "Stabilizer rényi entropy"  https://scholar.google.com/scholar?q=leone+Stabilizer+Renyi+Entropy
+    //     Leone, Oliviero, Hamma (2022) "Stabilizer rényi entropy"  https://scholar.google.com/scholar?q=leone+Stabilizer+Renyi+Entropy
     //         equation 3
     //         and the paragraph below equation 3
     //         but NOT on equation 7
     //     and
-    //     Niroula et al. (2024) "Phase transition in magic with random quantum circuits"  https://scholar.google.com/scholar?q=niroula+Phase+transition+in+magic+with+random+quantum+circuits
+    //     Niroula et al. (2024) "Phase transition in magic with random quantum circuits"  https://scholar.google.com/scholar?q=niroula+Phase+transition+in+magic+with+random+quantum+circuits
     //         section 2, second paragraph
     // Note that Leone et al. (2022) provide an example with an exact expression on page 2, 2nd paragraph after equation 5:
     //     the SSRE magic of |H>^(⊗N) is (1-alpha)^(-1) (N log(2^(1-alpha)+1)-N)
     //     Setting alpha=2, the expression reduces to N(2-log2(3))
     //     which leads to this way to test the routine:
     //        for ( let n = 1; n <= 7; n++ ) {
-    //            let stateVector = CMatrix.tensorPower( Sim.ket_H_magic_state, n );
+    //            let stateVector = CMatrix.kronPower( Sim.ket_H_magic_state, n );
     //            let rho = Sim.computeDensityMatrix( n, stateVector );
     //            let magic = Sim.computeSSREMagic( rho );
     //            console.log(`n=${n}; computed: ${magic}; predicted: ${n*(2-Math.log2(3))}`);
@@ -1917,7 +1857,7 @@ class Sim { // Simulator
         const numPauliStrings = Math.pow( NUM_SINGLE_QUBIT_PAULI_MATRICES, N );
         //console.log(`numPauliStrings is ${numPauliStrings}`);
 
-        // Use a stack so that we can usually reuse most of the tensor product from the previous iteration
+        // Use a stack so that we can usually reuse most of the Kronecker product from the previous iteration
         let previous_pauliString = [ ];
         let stackOfPauliProducts = [ ];
 
@@ -1970,7 +1910,7 @@ class Sim { // Simulator
                         if ( j === 0 )
                             M = singleQubitPauliMatrices[ pauliString[0] ];
                         else
-                            M = CMatrix.tensor(stackOfPauliProducts.at(-1), singleQubitPauliMatrices[ pauliString[j] ]);
+                            M = CMatrix.kron(stackOfPauliProducts.at(-1), singleQubitPauliMatrices[ pauliString[j] ]);
                         stackOfPauliProducts.push( M );
                     }
 
@@ -1983,7 +1923,7 @@ class Sim { // Simulator
                     // This is simpler, but slower, than using the stack.
                     P = singleQubitPauliMatrices[ pauliString[0] ];
                     for ( let j = 1; j < N; ++j ) {
-                        P = CMatrix.tensor(P, singleQubitPauliMatrices[ pauliString[j] ]);
+                        P = CMatrix.kron(P, singleQubitPauliMatrices[ pauliString[j] ]);
                     }
                 }
             }
@@ -2156,8 +2096,8 @@ function performRegressionTest( verbose=true ) {
     //                              |
     // qubit q1 |0>----------------(+)----
     //
-    input = CMatrix.tensor( Sim.ketZero /*q1*/, Sim.ketZero /*q0*/, usingTextbookConvention );
-    step1 = CMatrix.tensor( Sim.I /*q1*/, Sim.H /*q0*/, usingTextbookConvention );
+    input = CMatrix.kron( Sim.ketZero /*q1*/, Sim.ketZero /*q0*/, usingTextbookConvention );
+    step1 = CMatrix.kron( Sim.I /*q1*/, Sim.H /*q0*/, usingTextbookConvention );
     step2 = Sim.CX;
     output = CMatrix.naryMult([ step2, step1, input ]);
     if ( verbose) console.log(StringUtil.concatMultiline(
@@ -2183,9 +2123,9 @@ function performRegressionTest( verbose=true ) {
     //                 |
     // qubit q1 |0>---(+)-------
     //
-    input = CMatrix.tensor( Sim.ketZero /*q1*/, Sim.ketZero /*q0*/, usingTextbookConvention );
+    input = CMatrix.kron( Sim.ketZero /*q1*/, Sim.ketZero /*q0*/, usingTextbookConvention );
     step1 = Sim.CX;
-    step2 = CMatrix.tensor( Sim.I /*q1*/, Sim.X /*q0*/, usingTextbookConvention );
+    step2 = CMatrix.kron( Sim.I /*q1*/, Sim.X /*q0*/, usingTextbookConvention );
     output = CMatrix.naryMult([ step2, step1, input ]);
     if ( verbose ) console.log(StringUtil.concatMultiline(
         step2.toString(),
@@ -2210,9 +2150,9 @@ function performRegressionTest( verbose=true ) {
     //                 |
     // qubit q1 |0>---(+)-------
     //
-    input = CMatrix.tensor( Sim.ketZero /*q1*/, Sim.ketOne /*q0*/, usingTextbookConvention  );
+    input = CMatrix.kron( Sim.ketZero /*q1*/, Sim.ketOne /*q0*/, usingTextbookConvention  );
     step1 = Sim.CX;
-    step2 = CMatrix.tensor( Sim.I /*q1*/, Sim.X /*q0*/, usingTextbookConvention );
+    step2 = CMatrix.kron( Sim.I /*q1*/, Sim.X /*q0*/, usingTextbookConvention );
     output = CMatrix.naryMult([ step2, step1, input ]);
     if ( verbose ) console.log(StringUtil.concatMultiline(
         step2.toString(),
@@ -2237,9 +2177,9 @@ function performRegressionTest( verbose=true ) {
     //                 |
     // qubit q1 |i>---(+)-------
     //
-    input = CMatrix.tensor( Sim.ketPlusI /*q1*/, Sim.ketPlus /*q0*/, usingTextbookConvention );
+    input = CMatrix.kron( Sim.ketPlusI /*q1*/, Sim.ketPlus /*q0*/, usingTextbookConvention );
     step1 = Sim.CX;
-    step2 = CMatrix.tensor( Sim.I /*q1*/, Sim.X /*q0*/, usingTextbookConvention );
+    step2 = CMatrix.kron( Sim.I /*q1*/, Sim.X /*q0*/, usingTextbookConvention );
     output = CMatrix.naryMult([ step2, step1, input ]);
     if ( verbose ) console.log(StringUtil.concatMultiline(
         step2.toString(),
@@ -2264,8 +2204,8 @@ function performRegressionTest( verbose=true ) {
     //                                 |
     // qubit q1 |0>----RX(pi/2)----(RZ(pi/2))---
     //
-    input = CMatrix.tensor( Sim.ketZero /*q1*/, Sim.ketZero /*q0*/, usingTextbookConvention );
-    step1 = CMatrix.tensor( Sim.RX_90deg /*q1*/, Sim.RX_90deg /*q0*/, usingTextbookConvention );
+    input = CMatrix.kron( Sim.ketZero /*q1*/, Sim.ketZero /*q0*/, usingTextbookConvention );
+    step1 = CMatrix.kron( Sim.RX_90deg /*q1*/, Sim.RX_90deg /*q0*/, usingTextbookConvention );
     output = CMatrix.mult( step1, input );
     output = Sim.qubitWiseMultiply( Sim.RZ_90deg,1,2,output,[[0,true]]);
     if ( verbose ) console.log(StringUtil.concatMultiline(
@@ -2286,9 +2226,9 @@ function performRegressionTest( verbose=true ) {
     //
     // qubit q1 |0>----(y^0.25)-----(x^0.25)----
     //
-    input = CMatrix.tensor( Sim.ketZero /*q1*/, Sim.ketZero /*q0*/, usingTextbookConvention );
-    step1 = CMatrix.tensor( Sim.SSY /*q1*/, Sim.SSX /*q0*/, usingTextbookConvention );
-    step2 = CMatrix.tensor( Sim.SSX /*q1*/, Sim.I /*q0*/, usingTextbookConvention );
+    input = CMatrix.kron( Sim.ketZero /*q1*/, Sim.ketZero /*q0*/, usingTextbookConvention );
+    step1 = CMatrix.kron( Sim.SSY /*q1*/, Sim.SSX /*q0*/, usingTextbookConvention );
+    step2 = CMatrix.kron( Sim.SSX /*q1*/, Sim.I /*q0*/, usingTextbookConvention );
     output = CMatrix.naryMult([ step2, step1, input ]);
     if ( verbose ) console.log(StringUtil.concatMultiline(
         step2.toString(),
@@ -2315,9 +2255,9 @@ function performRegressionTest( verbose=true ) {
     //                                          |
     // qubit q2 |0>-------H---------------------X-----
     //
-    input = CMatrix.naryTensor( [ Sim.ketZero /*q2*/, Sim.ketZero /*q1*/, Sim.ketZero /*q0*/ ], usingTextbookConvention );
-    step1 = CMatrix.naryTensor( [ Sim.H /*q2*/, Sim.SSY /*q1*/, Sim.SSX /*q0*/ ], usingTextbookConvention );
-    step2 = CMatrix.naryTensor( [ Sim.I /*q2*/, Sim.SSX /*q1*/, Sim.I /*q0*/ ], usingTextbookConvention );
+    input = CMatrix.naryKron( [ Sim.ketZero /*q2*/, Sim.ketZero /*q1*/, Sim.ketZero /*q0*/ ], usingTextbookConvention );
+    step1 = CMatrix.naryKron( [ Sim.H /*q2*/, Sim.SSY /*q1*/, Sim.SSX /*q0*/ ], usingTextbookConvention );
+    step2 = CMatrix.naryKron( [ Sim.I /*q2*/, Sim.SSX /*q1*/, Sim.I /*q0*/ ], usingTextbookConvention );
     step3 = Sim.SWAP(1,2,3);
     output = CMatrix.naryMult([ step3, step2, step1, input ]);
     if ( verbose ) console.log(StringUtil.concatMultiline(
@@ -2358,9 +2298,9 @@ function performRegressionTest( verbose=true ) {
     //                                           |
     // qubit q2 |0>-------H----------------------o------
     //
-    input = CMatrix.naryTensor( [ Sim.ketZero /*q2*/, Sim.ketZero /*q1*/, Sim.ketZero /*q0*/ ], usingTextbookConvention );
-    step1 = CMatrix.naryTensor( [ Sim.H /*q2*/, Sim.SSY /*q1*/, Sim.SSX /*q0*/ ], usingTextbookConvention );
-    step2 = CMatrix.naryTensor( [ Sim.I /*q2*/, Sim.SSX /*q1*/, Sim.I /*q0*/ ], usingTextbookConvention );
+    input = CMatrix.naryKron( [ Sim.ketZero /*q2*/, Sim.ketZero /*q1*/, Sim.ketZero /*q0*/ ], usingTextbookConvention );
+    step1 = CMatrix.naryKron( [ Sim.H /*q2*/, Sim.SSY /*q1*/, Sim.SSX /*q0*/ ], usingTextbookConvention );
+    step2 = CMatrix.naryKron( [ Sim.I /*q2*/, Sim.SSX /*q1*/, Sim.I /*q0*/ ], usingTextbookConvention );
     step3 = Sim.expand4x4ForNWires( Sim.CX, 2, 1, 3 );
     output = CMatrix.naryMult([ step3, step2, step1, input ]);
     if ( verbose ) console.log(StringUtil.concatMultiline(
@@ -2399,7 +2339,7 @@ function performRegressionTest( verbose=true ) {
     //                                           |
     // qubit q2 |0>-------H----------------------o------
     //
-    input = CMatrix.naryTensor( [ Sim.ketZero /*q2*/, Sim.ketZero /*q1*/, Sim.ketZero /*q0*/ ], usingTextbookConvention  );
+    input = CMatrix.naryKron( [ Sim.ketZero /*q2*/, Sim.ketZero /*q1*/, Sim.ketZero /*q0*/ ], usingTextbookConvention  );
     step1 = Sim.qubitWiseMultiply(Sim.H,2,3,input,[]);
     step1 = Sim.qubitWiseMultiply(Sim.SSY,1,3,step1,[]);
     step1 = Sim.qubitWiseMultiply(Sim.SSX,0,3,step1,[]);
@@ -2430,8 +2370,8 @@ function performRegressionTest( verbose=true ) {
     //                           |
     // qubit q1 |->---(x^0.5)---(+)----
     //
-    input = CMatrix.tensor( Sim.ketMinus /*q1*/, Sim.ketZero /*q0*/, usingTextbookConvention );
-    step1 = CMatrix.tensor( Sim.SX /*q1*/, Sim.SX /*q0*/, usingTextbookConvention );
+    input = CMatrix.kron( Sim.ketMinus /*q1*/, Sim.ketZero /*q0*/, usingTextbookConvention );
+    step1 = CMatrix.kron( Sim.SX /*q1*/, Sim.SX /*q0*/, usingTextbookConvention );
     step2 = Sim.CX;
     output = CMatrix.naryMult([ step2, step1, input ]);
     if ( verbose ) console.log(StringUtil.concatMultiline(
@@ -2462,9 +2402,9 @@ function performRegressionTest( verbose=true ) {
     //                                     |
     // qubit q1 |0>-----(+)-----(x^0.5)---(+)----
     //
-    input = CMatrix.tensor( Sim.ketZero /*q1*/, Sim.ketZero /*q0*/, usingTextbookConvention );
-    step1 = CMatrix.tensor( Sim.X /*q1*/, Sim.SX /*q0*/, usingTextbookConvention );
-    step2 = CMatrix.tensor( Sim.SX /*q1*/, Sim.H /*q0*/, usingTextbookConvention );
+    input = CMatrix.kron( Sim.ketZero /*q1*/, Sim.ketZero /*q0*/, usingTextbookConvention );
+    step1 = CMatrix.kron( Sim.X /*q1*/, Sim.SX /*q0*/, usingTextbookConvention );
+    step2 = CMatrix.kron( Sim.SX /*q1*/, Sim.H /*q0*/, usingTextbookConvention );
     step3 = Sim.CX;
     output = CMatrix.naryMult([ step3, step2, step1, input ]);
     if ( verbose ) console.log(StringUtil.concatMultiline(
@@ -2499,8 +2439,8 @@ function performRegressionTest( verbose=true ) {
     //                          |
     // qubit q2 |0>---(x^0.5)---o----
     //
-    input = CMatrix.naryTensor( [ Sim.ketZero /*q2*/, Sim.ketZero /*q1*/, Sim.ketZero /*q0*/ ], usingTextbookConvention  );
-    step1 = CMatrix.naryTensor( [ Sim.SX /*q2*/, Sim.SX /*q1*/, Sim.SX /*q0*/ ], usingTextbookConvention  );
+    input = CMatrix.naryKron( [ Sim.ketZero /*q2*/, Sim.ketZero /*q1*/, Sim.ketZero /*q0*/ ], usingTextbookConvention  );
+    step1 = CMatrix.naryKron( [ Sim.SX /*q2*/, Sim.SX /*q1*/, Sim.SX /*q0*/ ], usingTextbookConvention  );
     step2 = Sim.expand4x4ForNWires( Sim.CX, 2, 1, 3 );
     output = CMatrix.naryMult([ step2, step1, input ]);
     if ( verbose ) console.log(StringUtil.concatMultiline(
@@ -2535,7 +2475,7 @@ function performRegressionTest( verbose=true ) {
     //                          |
     // qubit q2 |0>---(x^0.5)---o----
     //
-    input = CMatrix.naryTensor( [ Sim.ketZero /*q2*/, Sim.ketZero /*q1*/, Sim.ketZero /*q0*/ ], usingTextbookConvention  );
+    input = CMatrix.naryKron( [ Sim.ketZero /*q2*/, Sim.ketZero /*q1*/, Sim.ketZero /*q0*/ ], usingTextbookConvention  );
     step1 = Sim.qubitWiseMultiply(Sim.SX,0,3,input,[]);
     step1 = Sim.qubitWiseMultiply(Sim.SX,1,3,step1,[]);
     step1 = Sim.qubitWiseMultiply(Sim.SX,2,3,step1,[]);
@@ -2565,12 +2505,12 @@ function performRegressionTest( verbose=true ) {
     //                                      |
     // qubit q3 |0>---(x^0.5)--------------(+)--------------
     //
-    input = CMatrix.naryTensor( [ Sim.ketZero /*q3*/, Sim.ketZero /*q2*/, Sim.ketZero /*q1*/, Sim.ketZero /*q0*/ ], usingTextbookConvention );
-    step1 = CMatrix.naryTensor( [ Sim.SX /*q3*/, Sim.I /*q2*/, Sim.SX /*q1*/, Sim.H /*q0*/ ], usingTextbookConvention );
+    input = CMatrix.naryKron( [ Sim.ketZero /*q3*/, Sim.ketZero /*q2*/, Sim.ketZero /*q1*/, Sim.ketZero /*q0*/ ], usingTextbookConvention );
+    step1 = CMatrix.naryKron( [ Sim.SX /*q3*/, Sim.I /*q2*/, Sim.SX /*q1*/, Sim.H /*q0*/ ], usingTextbookConvention );
     step2 = Sim.expand4x4ForNWires( Sim.CX, 0, 2, 4 );
     step3 = Sim.expand4x4ForNWires( Sim.CX, 2, 1, 4 );
     step4 = Sim.expand4x4ForNWires( Sim.CX, 1, 3, 4 );
-    step5 = CMatrix.naryTensor( [ Sim.I /*q3*/, Sim.I /*q2*/, Sim.H /*q1*/, Sim.I /*q0*/ ], usingTextbookConvention );
+    step5 = CMatrix.naryKron( [ Sim.I /*q3*/, Sim.I /*q2*/, Sim.H /*q1*/, Sim.I /*q0*/ ], usingTextbookConvention );
 
     output = CMatrix.naryMult([ step5, step4, step3, step2, step1, input ]);
     if ( verbose ) console.log(StringUtil.concatMultiline(
