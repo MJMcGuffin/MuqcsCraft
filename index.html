@@ -216,6 +216,17 @@ Export options:
 
     </blockquote>
 
+    Export to qcircuit for LaTeX:
+
+    <blockquote>
+
+    Qcircuit code that you can paste into a LaTeX document:
+    <br/>
+    <pre id="qcircuitText"></pre>
+    <button id="copyQcircuitButton">Copy qcircuit code</button>
+
+    </blockquote>
+
     </span>
 </blockquote>
 
@@ -248,7 +259,7 @@ Predefined circuits:
     <a href='?circuit={"cols":[["H"],["•","X"],[1,"•","X"],[1,1,"•","X"]]}'>GHZ-4 state</a> <br/>
     <a href='?circuit={"cols":[["H",1,"Y^¼","X"],["•","X"],[1,"•","X"],[1,1,"•","X"]]}'>Variant of GHZ-4</a> <br/>
     <a href='?circuit={%22cols%22:[[{%22id%22:%22Ryft%22,%22arg%22:%221.9106332362490184%22}],[%22%E2%80%A2%22,%22H%22],[1,%22%E2%80%A2%22,%22X%22],[%22%E2%80%A2%22,%22X%22],[%22X%22]]}'>W state</a> [<a href="https://en.wikipedia.org/wiki/W_state">reference</a>] <br/>
-    <a href='?circuit={"cols":[["H",1,1,"H"],["•","X",1,"•"],["X",1,1,"X"],["•",1,"X","•"],["X",1,"•"],[1,1,"•","X"]]}'>W-4 state</a> adapted from <a href="https://quantumcomputing.stackexchange.com/questions/4350/general-construction-of-w-n-state">here</a>  <br/>
+    <a href='?circuit={"cols":[["H"],[1,1,1,"H"],["•","X",1,"•"],["X"],[1,1,1,"X"],["•",1,"X","•"],["X",1,"•"],[1,1,"•","X"]]}'>W-4 state</a> adapted from <a href="https://quantumcomputing.stackexchange.com/questions/4350/general-construction-of-w-n-state">here</a>  <br/>
     <a href='?circuit={"cols":[["H","Y^¼"],["•","X"],["Y^¼"],["•","X"]]}'>partial entanglement followed by partial disentanglement (1)</a> <br/>
     <a href='?circuit={"cols":[["H",1,"Y^¼"],["•","X"],[1,"•","X"],[1,1,"•","X"],[1,"•","X"]]}'>partial entanglement followed by partial disentanglement (2)</a> <br/>
     <a href='?circuit={"cols":[["Y^¼"],["•",1,"X"],["H"],[1,"X","•"],[1,1,"X"],[1,"H","•"],[1,1,"X"],["•","X","•"],[1,1,"X"],["•",1,"•","X"],[1,"•","•",1,"X"]]}'>variant of Werner state</a> based on Figure A1 in <a href="https://scholar.google.com/scholar?q=Bell+Diagonal+and+Werner+State+Generation+Entanglement+Non-Locality+Steering+and+Discord+on+the+IBM+Quantum+Computer">Riedel Garding et al. 2021</a><br/>
@@ -5043,6 +5054,147 @@ class Circuit {
         }
         return result;
     }
+    generateLatexQCircuitString( withHTMLLineBreaks ) {
+        const lineIndentation = "    ";
+        const lineBreak = withHTMLLineBreaks ? "<br/>\n" : "\n";
+        let arrayOfCompleteStrings = Array( this.numWires ).fill( lineIndentation + lineIndentation + "\\lstick{\\ket{0}}" );
+        for ( let s = 0; s < this.numStages; ++s ) {
+            let numCircuitParts = 0;
+            let hasControlBits = false;
+            let numSwapParts = 0;
+            let min_w_of_any_part = -1;
+            let max_w_of_any_part = -1;
+            let min_w_of_swap_part = -1;
+            let max_w_of_swap_part = -1;
+
+            for ( let w = 0; w < this.numWires; ++w ) {
+                let circuitPart_id = this.getCircuitPartIDOfCell(w,s);
+                if ( circuitPart_id >= 0 ) {
+                    numCircuitParts ++;
+                    if ( numCircuitParts === 1 )
+                        min_w_of_any_part = w;
+                    max_w_of_any_part = w;
+                    if ( circuitPart_id === CP_CB || circuitPart_id === CP_ACB ) {
+                        hasControlBits = true;
+                    }
+                    else if ( circuitPart_id === CP_SWAP ) {
+                        numSwapParts ++;
+                        if ( numSwapParts === 1 )
+                            min_w_of_swap_part = w;
+                        max_w_of_swap_part = w;
+                    }
+                }
+            }
+
+            let hasVerticalLineSegments = false;
+            let min_w_of_verticalLineSegments = -1;
+            let max_w_of_verticalLineSegments = -1;
+            if ( hasControlBits ) {
+                hasVerticalLineSegments = true;
+                min_w_of_verticalLineSegments = min_w_of_any_part;
+                max_w_of_verticalLineSegments = max_w_of_any_part;
+            }
+            else if ( numSwapParts === 2 ) {
+                hasVerticalLineSegments = true;
+                min_w_of_verticalLineSegments = min_w_of_swap_part;
+                max_w_of_verticalLineSegments = max_w_of_swap_part;
+            }
+
+            // Construct the strings for just this layer, i.e. this stage
+            let arrayOfStrings = Array( this.numWires ).fill("");
+            for ( let w = 0; w < this.numWires; ++w ) {
+                let circuitPart = this.cells[w][s];
+                let circuitPart_id = this.getCircuitPartIDOfCell(w,s);
+                let paramString = "";
+                if ( circuitPart_id > CP_EMPTY && circuitPart.isParametric() ) {
+                    switch ( circuitPart.getNumParameters() ) {
+                        case 1 : paramString = circuitPart.getParameterAsString(0);
+                            break;
+                        case 2 : paramString = circuitPart.getParameterAsString(0)
+                            +"," + circuitPart.getParameterAsString(1);
+                            break;
+                        case 3 : paramString = circuitPart.getParameterAsString(0)
+                            +"," + circuitPart.getParameterAsString(1)
+                            +"," + circuitPart.getParameterAsString(2);
+                            break;
+                    }
+                    paramString = paramString.replace(/°/g, "^\\circ");
+                }
+                let partString = "";
+                switch ( circuitPart_id ) {
+                    case CP_EMPTY:  partString = "\\qw"; break;
+                    case CP_CB:     partString = "\\ctrl{0}"; break;
+                    case CP_ACB:    partString = "\\ctrlo{0}"; break;
+                    case CP_SWAP:   partString = "\\qswap"; break;
+                    case CP_I:      partString = "\\gate{I}"; break;
+                    case CP_H:      partString = "\\gate{H}"; break;
+                    case CP_X:      partString = "\\gate{X}"; break;
+                    case CP_Y:      partString = "\\gate{Y}"; break;
+                    case CP_Z:      partString = "\\gate{Z}"; break;
+                    case CP_SX:     partString = "\\gate{\\sqrt{X}}"; break;
+                    case CP_SY:     partString = "\\gate{\\sqrt{Y}}"; break;
+                    case CP_SZ:     partString = "\\gate{S}"; break;
+                    case CP_SSX:    partString = "\\gate{\\sqrt[4]{X}}"; break;
+                    case CP_SSY:    partString = "\\gate{\\sqrt[4]{Y}}"; break;
+                    case CP_SSZ:    partString = "\\gate{T}"; break;
+                    case CP_invSX:  partString = "\\gate{\\sqrt{X}^\\dagger}"; break;
+                    case CP_invSY:  partString = "\\gate{\\sqrt{Y}^\\dagger}"; break;
+                    case CP_invSZ:  partString = "\\gate{S^\\dagger}"; break;
+                    case CP_invSSX: partString = "\\gate{\\sqrt[4]{X}^\\dagger}"; break;
+                    case CP_invSSY: partString = "\\gate{\\sqrt[4]{Y}^\\dagger}"; break;
+                    case CP_invSSZ: partString = "\\gate{T^\\dagger}"; break;
+                    case CP_XE: partString = `\\gate{X^{${paramString}}}`; break;
+                    case CP_YE: partString = `\\gate{Y^{${paramString}}}`; break;
+                    case CP_ZE: partString = `\\gate{Z^{${paramString}}}`; break;
+                    case CP_RX: partString = `\\gate{R_x(${paramString})}`; break;
+                    case CP_RY: partString = `\\gate{R_y(${paramString})}`; break;
+                    case CP_RZ: partString = `\\gate{R_z(${paramString})}`; break;
+                    case CP_GP: partString = `\\gate{GP(${paramString})}`; break;
+                    case CP_PH: partString = `\\gate{Ph(${paramString})}`; break;
+                    case CP_ZG: partString = `\\gate{Z_G(${paramString})}`; break;
+                    case CP_YG: partString = `\\gate{Y_G(${paramString})}`; break;
+                    case CP_HG: partString = `\\gate{H_G(${paramString})}`; break;
+                }
+                if (
+                    hasVerticalLineSegments
+                    && circuitPart_id !== CP_EMPTY
+                    && min_w_of_verticalLineSegments < w && w <= max_w_of_verticalLineSegments
+                ) {
+                    // draw vertical line segment above this part
+                    let w2 = w-1;
+                    for ( ; w2 >= min_w_of_verticalLineSegments; w2-- ) {
+                        if ( this.getCircuitPartIDOfCell(w2,s) != CP_EMPTY )
+                            break;
+                    }
+                    partString += ` \\qwx[-${w-w2}]`;
+                }
+                arrayOfStrings[ w ] = partString;
+            }
+
+            // add the strings that we constructed to the ends of the cumulative strings
+            let maxStringLength = 0;
+            for ( let w = 0; w < this.numWires; ++w ) {
+                //console.log( arrayOfStrings[w] + "," + arrayOfStrings[w].length );
+                if ( arrayOfStrings[w].length > maxStringLength )
+                    maxStringLength = arrayOfStrings[w].length;
+            }
+            //console.log(maxStringLength);
+            for ( let w = 0; w < this.numWires; ++w ) {
+                arrayOfCompleteStrings[ w ] += " & " + arrayOfStrings[ w ].padEnd( maxStringLength );
+            }
+        }
+        for ( let w = 0; w < this.numWires; ++w ) {
+            arrayOfCompleteStrings[ w ] += " & \\qw";
+            if ( w < this.numWires - 1 ) // if we are not yet at the last line ...
+                arrayOfCompleteStrings[ w ] += " \\\\"
+        }
+        let result = "\\[" + lineBreak
+            + lineIndentation + "\\Qcircuit @C=1em @R=.7em {" + lineBreak
+            + arrayOfCompleteStrings.join( lineBreak ) + lineBreak
+            + lineIndentation + "}" + lineBreak
+            + "\\]" + lineBreak;
+        return result;
+    }
     constructFromString( circuitString ) {
         this.clear();
         let obj = JSON.parse( circuitString );
@@ -7967,6 +8119,7 @@ const QUIRK_LINK_ID = 'quirkLink';
 const QUIRK_URL = "https://algassert.com/quirk";
 const QUIRK_URL_PREFIX = "https://algassert.com/quirk#circuit=";
 const QASM_TEXT_ID = 'qasmText';
+const QCIRCUIT_TEXT_ID = 'qcircuitText';
 const URL_PARAM_CIRCUIT = 'circuit';
 
 
@@ -7975,9 +8128,12 @@ function updateWebpageContent( circuitDescribedInString ) {
     let quirkLinkElement = document.getElementById( QUIRK_LINK_ID );
     if (quirkLinkElement)
         quirkLinkElement.href = circuitDescribedInString==="" ? QUIRK_URL : QUIRK_URL_PREFIX + circuitDescribedInString;
-    let qasmTextElement = document.getElementById( QASM_TEXT_ID )
+    let qasmTextElement = document.getElementById( QASM_TEXT_ID );
     if (qasmTextElement)
         qasmTextElement.textContent = global_circuit.generateQASMString( false );
+    let qcircuitTextElement = document.getElementById( QCIRCUIT_TEXT_ID );
+    if (qcircuitTextElement)
+        qcircuitTextElement.textContent = global_circuit.generateLatexQCircuitString( false );
 }
 
 function initializeWithNewCircuit() {
@@ -8592,6 +8748,10 @@ function initializeStuffInTheDOM() {
 
     document.getElementById('copyQASMButton').addEventListener('click', () => {
       let text = document.getElementById('qasmText').textContent;
+      navigator.clipboard.writeText(text);
+    });
+    document.getElementById('copyQcircuitButton').addEventListener('click', () => {
+      let text = document.getElementById('qcircuitText').textContent;
       navigator.clipboard.writeText(text);
     });
 
